@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 import polars as pl
 
-OIL_CACHE_PATH = "oil_prices.csv"
+_HERE = Path(__file__).parent
+OIL_CACHE_PATH = _HERE / "oil_prices.csv"
 
 
 def get_oil_prices(start: str, end: str) -> pl.DataFrame:

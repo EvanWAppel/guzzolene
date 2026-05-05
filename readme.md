@@ -14,19 +14,27 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Usage
+## Quickstart
+
+Generate all plots and open the `images/` folder:
+
+```bash
+python main.py
+```
+
+## Usage in Python / Jupyter
 
 ```python
 from main import get_data, plot_all, plot_cost_per_mile
 
 df = get_data()          # cleaned, null-filled DataFrame
 plot_all(df)             # 2×2 overview of all metrics
-plot_cost_per_mile(df)   # derived efficiency metric
+plot_cost_per_mile(df)   # cost/mile overlaid with WTI crude oil price
 ```
 
-Individual plots are also available: `plot_cost`, `plot_gallons`, `plot_odometer`, `plot_price_per_gallon`.
+Individual plots: `plot_cost`, `plot_gallons`, `plot_odometer`, `plot_price_per_gallon`.
 
-For interactive exploration, open [`scratch.ipynb`](scratch.ipynb) in JupyterLab:
+For interactive exploration, open [`scratch.ipynb`](scratch.ipynb):
 
 ```bash
 jupyter lab scratch.ipynb

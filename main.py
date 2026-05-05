@@ -1,10 +1,11 @@
 from datetime import date
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import polars as pl
 from utils import fill_nulls, get_oil_prices, monthly_avg
 
-DATA_PATH = "gas_purchases.csv"
+DATA_PATH = Path(__file__).parent / "gas_purchases.csv"
 
 _PLOT_CONFIGS = {
     "cost":             {"label": "Total Cost ($)",       "color": "#2196F3"},
@@ -151,3 +152,35 @@ def plot_all(df: pl.DataFrame) -> plt.Figure:
     fig.tight_layout()
     plt.close(fig)
     return fig
+
+
+if __name__ == "__main__":
+    import platform
+    import subprocess
+
+    out = Path(__file__).parent / "images"
+    out.mkdir(exist_ok=True)
+
+    df = get_data()
+
+    plots = {
+        "overview":         plot_all(df),
+        "cost":             plot_cost(df),
+        "gallons":          plot_gallons(df),
+        "odometer":         plot_odometer(df),
+        "price_per_gallon": plot_price_per_gallon(df),
+        "cost_per_mile":    plot_cost_per_mile(df),
+    }
+
+    for name, fig in plots.items():
+        path = out / f"{name}.png"
+        fig.savefig(path, dpi=130, bbox_inches="tight")
+        print(f"  saved {path.name}")
+
+    system = platform.system()
+    if system == "Darwin":
+        subprocess.run(["open", str(out)])
+    elif system == "Windows":
+        subprocess.run(["explorer", str(out)])
+    else:
+        subprocess.run(["xdg-open", str(out)])
