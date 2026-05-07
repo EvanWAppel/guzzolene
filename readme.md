@@ -4,25 +4,24 @@ My friend Christine thinks that gasoline has become diluted since the Iran war s
 
 ---
 
-## Setup
+## Quickstart
 
 ```bash
 git clone <repo-url>
 cd gas_economics
-python3 -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+bash run.sh        # macOS / Linux
+run.bat            # Windows
 ```
 
-## Quickstart
-
-Generate all plots and open the `images/` folder:
-
-```bash
-python main.py
-```
+`run.sh` creates the virtual environment, installs dependencies, generates all plots, and opens the `images/` folder — no manual setup needed.
 
 ## Usage in Python / Jupyter
+
+After running `run.sh` once, activate the environment for interactive use:
+
+```bash
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+```
 
 ```python
 from main import get_data, plot_all, plot_cost_per_mile

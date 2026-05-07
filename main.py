@@ -1,5 +1,18 @@
-from datetime import date
+import os
+import sys
 from pathlib import Path
+
+# Bootstrap: if running outside the venv, re-exec with the venv's Python.
+_venv_python = Path(__file__).parent / (
+    ".venv/Scripts/python.exe" if sys.platform == "win32" else ".venv/bin/python"
+)
+if _venv_python.exists() and Path(sys.executable).resolve() != _venv_python.resolve():
+    os.execv(str(_venv_python), [str(_venv_python)] + sys.argv)
+elif not _venv_python.exists():
+    print("Virtual environment not found. Run 'bash run.sh' (or 'run.bat') first.")
+    sys.exit(1)
+
+from datetime import date
 
 import matplotlib.pyplot as plt
 import polars as pl
