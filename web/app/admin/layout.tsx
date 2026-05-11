@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -6,8 +6,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sessionClaims } = await auth();
-  const meta = sessionClaims?.publicMetadata as Record<string, unknown> | undefined;
+  const user = await currentUser();
+  const meta = (user?.publicMetadata ?? {}) as Record<string, unknown>;
   if (meta?.role !== "admin") redirect("/dashboard");
 
   return <>{children}</>;

@@ -1,4 +1,4 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware, clerkClient, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
@@ -12,7 +12,7 @@ const isPublicRoute = createRouteMatcher([
 export const proxy = clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return;
 
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
 
   // Not signed in → redirect to sign-in
   if (!userId) {
@@ -21,8 +21,12 @@ export const proxy = clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Signed in but not approved → redirect to pending (unless already there)
-  const meta = sessionClaims?.publicMetadata as Record<string, unknown> | undefined;
+  // Fetch fresh user metadata directly from Clerk API —
+  // publicMetadata is not included in the JWT session claims by default in Clerk v7
+  const client = await clerkClient();
+  const user = await client.users.getUser(userId);
+  const meta = user.publicMetadata as Record<string, unknown>;
+
   if (meta?.approved !== true && meta?.role !== "admin") {
     return NextResponse.redirect(new URL("/pending", req.url));
   }

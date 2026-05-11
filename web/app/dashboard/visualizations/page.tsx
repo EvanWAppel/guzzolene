@@ -5,6 +5,8 @@ import { getMonthlyOilPrices } from "@/lib/oil-prices";
 import OverviewGrid from "@/components/charts/OverviewGrid";
 import PricePerGallonChart from "@/components/charts/PricePerGallonChart";
 import CostPerMileChart from "@/components/charts/CostPerMileChart";
+import MpgChart from "@/components/charts/MpgChart";
+import GpmChart from "@/components/charts/GpmChart";
 import EventSearch from "@/components/EventSearch";
 
 export default async function VisualizationsPage() {
@@ -38,6 +40,11 @@ export default async function VisualizationsPage() {
       <OverviewGrid data={monthly} events={events} />
       <PricePerGallonChart data={monthly} events={events} />
       <CostPerMileChart data={monthly} oilPrices={oilPrices} events={events} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <MpgChart data={monthly} events={events} />
+        <GpmChart data={monthly} events={events} />
+      </div>
     </div>
   );
 }

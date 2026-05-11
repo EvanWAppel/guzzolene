@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -9,10 +9,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const meta = sessionClaims?.publicMetadata as Record<string, unknown> | undefined;
+  // currentUser() fetches the full user object including publicMetadata
+  const user = await currentUser();
+  const meta = (user?.publicMetadata ?? {}) as Record<string, unknown>;
   if (meta?.approved !== true && meta?.role !== "admin") {
     redirect("/pending");
   }
