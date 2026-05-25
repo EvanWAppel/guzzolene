@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getTableColumns } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { gasPurchases, worldEvents } from "@/lib/db/schema";
 
 describe("gasPurchases schema", () => {
@@ -58,5 +59,13 @@ describe("worldEvents schema", () => {
   it("name and date are NOT NULL", () => {
     expect(cols.name.notNull).toBe(true);
     expect(cols.date.notNull).toBe(true);
+  });
+
+  it("declares a unique constraint on (userId, date, name) with NULLS NOT DISTINCT", () => {
+    const { uniqueConstraints } = getTableConfig(worldEvents);
+    const uq = uniqueConstraints.find((c) => c.name === "world_events_user_date_name_unique");
+    expect(uq).toBeDefined();
+    expect(uq!.columns.map((c) => c.name).sort()).toEqual(["date", "name", "user_id"]);
+    expect(uq!.nullsNotDistinct).toBe(true);
   });
 });

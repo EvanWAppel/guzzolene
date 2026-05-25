@@ -415,60 +415,60 @@ Independent of A, B, C, D, F. Touches `app/page.tsx`, `app/dashboard/visualizati
 
 Independent of A, B, C, D, E. Touches `actions/events.ts`, `components/EventSearch.tsx`, seed script.
 
-#### F-1 — [ ] Server action test: `updateEvent` enforces ownership
+#### F-1 — [x] Server action test: `updateEvent` enforces ownership
 **Deps:** V-8
 **TDD:** failing test mirroring A-9 for events.
 
-#### F-2 — [ ] Implement `updateEvent`
+#### F-2 — [x] Implement `updateEvent`
 **Deps:** F-1
 **TDD:** pass F-1.
 
-#### F-3 — [ ] Server action test: `deleteEvent` enforces ownership
+#### F-3 — [x] Server action test: `deleteEvent` enforces ownership
 **Deps:** F-2
 **TDD:** failing test for delete.
 
-#### F-4 — [ ] Implement `deleteEvent`
+#### F-4 — [x] Implement `deleteEvent`
 **Deps:** F-3
 **TDD:** pass F-3.
 
-#### F-5 — [ ] Component test: event row has edit/delete controls
+#### F-5 — [x] Component test: event row has edit/delete controls
 **Deps:** F-4
 **TDD:** failing test that each pinned event renders edit and delete buttons.
 
-#### F-6 — [ ] Add edit/delete UI to event list
+#### F-6 — [x] Add edit/delete UI to event list
 **Deps:** F-5
 **TDD:** pass F-5. Manually verify: edit an event date, delete an event.
 
-#### F-7 — [ ] Migration script: seed hardcoded events as DB rows
+#### F-7 — [x] Migration script: seed hardcoded events as DB rows
 **Deps:** F-6
 **TDD:**
 - New script `web/seed/seed-owner-events.ts` that reads the 8 events from a single source (port the list from `main.py:EVENTS` into a TS constant) and upserts each as `world_events` row with `user_id = null`.
 - Use `(date, name)` as the natural key for idempotency (add unique constraint if missing — see F-8).
 
-#### F-8 — [ ] Add unique constraint for owner events
+#### F-8 — [x] Add unique constraint for owner events
 **Deps:** F-7
 **TDD:**
 - Schema test: a unique constraint exists on `(user_id, date, name)` (or partial index on `user_id IS NULL` if Drizzle supports it cleanly).
 - Add to schema; migrate.
 
-#### F-9 — [ ] Run owner-events migration in dev
+#### F-9 — [x] Run owner-events migration in dev
 **Deps:** F-8
 **TDD:**
 - Add `db:seed-events` to package.json.
 - Run, verify 8 rows present.
 - Run again, verify no duplicates.
 
-#### F-10 — [ ] Remove hardcoded events from old seed
+#### F-10 — [x] Remove hardcoded events from old seed
 **Deps:** F-9
 **TDD:**
 - Delete the events array from `web/seed/seed-owner.ts` (gas purchases only).
 - Delete `EVENTS` from `main.py` is **out of scope** (Python is frozen — leave it as historical reference).
 
-#### F-11 — [ ] Component test: "Pin to public home" toggle (owner-only)
+#### F-11 — [x] Component test: "Pin to public home" toggle (owner-only)
 **Deps:** F-10
 **TDD:** failing test rendering `EventSearch` as the owner (mock Clerk role) showing a toggle; as a non-owner, no toggle.
 
-#### F-12 — [ ] Implement pin-to-public toggle
+#### F-12 — [x] Implement pin-to-public toggle
 **Deps:** F-11
 **TDD:**
 - When toggle is on and the user has `publicMetadata.role === "admin"`, the saved event gets `user_id = null`.

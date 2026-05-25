@@ -40,6 +40,6 @@ export function createMockDb(): MockDb {
 export function mockAuth(userId: string | null, role?: "admin") {
   return vi.fn(async () => ({
     userId,
-    sessionClaims: role ? { metadata: { role } } : undefined,
+    sessionClaims: role ? { publicMetadata: { role } } : undefined,
   }));
 }

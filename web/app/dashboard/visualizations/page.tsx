@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { listUserPurchases } from "@/actions/purchases";
 import { listUserEvents } from "@/actions/events";
 import { monthlyAvg } from "@/lib/aggregations";
@@ -9,6 +10,7 @@ import CostPerMileChart from "@/components/charts/CostPerMileChart";
 import MpgChart from "@/components/charts/MpgChart";
 import GpmChart from "@/components/charts/GpmChart";
 import EventSearch from "@/components/EventSearch";
+import EventList from "@/components/EventList";
 import DateRangeFilter from "@/components/DateRangeFilter";
 
 export default async function VisualizationsPage({
@@ -18,6 +20,9 @@ export default async function VisualizationsPage({
 }) {
   const params = await searchParams;
   const range = parseDateRange(params);
+  const { sessionClaims } = await auth();
+  const meta = sessionClaims?.publicMetadata as Record<string, unknown> | undefined;
+  const isAdmin = meta?.role === "admin";
 
   const [purchases, events] = await Promise.all([
     listUserPurchases(),
@@ -44,10 +49,12 @@ export default async function VisualizationsPage({
     <div className="space-y-10">
       <div className="flex items-start justify-between">
         <h2 className="text-2xl font-semibold">My Charts</h2>
-        <EventSearch />
+        <EventSearch isAdmin={isAdmin} />
       </div>
 
       <DateRangeFilter />
+
+      <EventList events={events} />
 
       <OverviewGrid data={monthly} events={filteredEvents} />
       <PricePerGallonChart data={monthly} events={filteredEvents} />

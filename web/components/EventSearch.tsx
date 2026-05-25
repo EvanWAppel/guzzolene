@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-export default function EventSearch() {
+export default function EventSearch({ isAdmin = false }: { isAdmin?: boolean }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WikiSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<WikiSearchResult | null>(null);
   const [date, setDate] = useState("");
+  const [pinToPublic, setPinToPublic] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function handleSearch() {
@@ -44,10 +45,12 @@ export default function EventSearch() {
       "wikipediaUrl",
       `https://en.wikipedia.org/wiki/${encodeURIComponent(selected.title)}`
     );
+    if (pinToPublic && isAdmin) fd.set("pinToPublic", "1");
     try {
       await saveEvent(fd);
       setSelected(null);
       setDate("");
+      setPinToPublic(false);
       setResults([]);
       setQuery("");
     } finally {
@@ -109,6 +112,17 @@ export default function EventSearch() {
               Pick the date to mark on the chart. Wikipedia search results don&apos;t always
               include a single date, so enter it manually.
             </p>
+            {isAdmin && (
+              <label className="flex items-center gap-2 text-sm pt-2">
+                <input
+                  type="checkbox"
+                  checked={pinToPublic}
+                  onChange={(e) => setPinToPublic(e.target.checked)}
+                  aria-label="Pin to public home"
+                />
+                Pin to public home
+              </label>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelected(null)}>
