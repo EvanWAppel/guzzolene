@@ -12,7 +12,6 @@ function makePurchase(overrides: Partial<GasPurchase> = {}): GasPurchase {
     gallons: "12.500",
     odometer: 82000,
     pricePerGallon: "3.600",
-    pumpPhotoUrl: null,
     fuelGrade: "87",
     createdAt: new Date(),
     ...overrides,

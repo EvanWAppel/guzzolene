@@ -8,7 +8,6 @@ export const gasPurchases = pgTable("gas_purchases", {
   gallons: numeric("gallons", { precision: 8, scale: 3 }),
   odometer: integer("odometer"),
   pricePerGallon: numeric("price_per_gallon", { precision: 6, scale: 3 }),
-  pumpPhotoUrl: text("pump_photo_url"),
   fuelGrade: text("fuel_grade").notNull().default("87"),
   createdAt: timestamp("created_at").defaultNow(),
 });

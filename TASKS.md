@@ -201,41 +201,41 @@ Adds geolocation (lat/lng) and edit/delete to fill-ups.
 
 Pure deletion + one destructive migration. Independent of all other streams.
 
-#### B-1 — [ ] Test: pump-photo upload endpoint returns 404
+#### B-1 — [x] Test: pump-photo upload endpoint returns 404
 **Deps:** V-8
 **TDD:** add a failing route test (or HTTP-level test) hitting `/api/upload-photo` and `/api/extract-pump` expecting 404.
 
-#### B-2 — [ ] Delete OCR API routes
+#### B-2 — [x] Delete OCR API routes
 **Deps:** B-1
 **TDD:**
 - `rm -rf web/app/api/upload-photo web/app/api/extract-pump`.
 - B-1 passes.
 
-#### B-3 — [ ] Delete OCR library code
+#### B-3 — [x] Delete OCR library code
 **Deps:** B-2
 **TDD:**
 - Delete `web/lib/claude.ts`.
 - Delete `web/components/PumpPhotoUpload.tsx` if no non-OCR code remains; otherwise extract the form and rename.
 - No test required.
 
-#### B-4 — [ ] Remove Anthropic + Blob deps from package.json
+#### B-4 — [x] Remove Anthropic + Blob deps from package.json
 **Deps:** B-3
 **TDD:**
 - `npm uninstall @anthropic-ai/sdk @vercel/blob`.
 - No test required.
 - Run `npm run build` to confirm no remaining imports break.
 
-#### B-5 — [ ] Remove env-var docs for OCR
+#### B-5 — [x] Remove env-var docs for OCR
 **Deps:** B-4
 **TDD:**
 - Strip `BLOB_READ_WRITE_TOKEN` and `ANTHROPIC_API_KEY` rows from `web/README.md` env table.
 - No test required.
 
-#### B-6 — [ ] Schema test: `pump_photo_url` column is gone
+#### B-6 — [x] Schema test: `pump_photo_url` column is gone
 **Deps:** B-5
 **TDD:** failing test asserting `gasPurchases` has no `pumpPhotoUrl` key.
 
-#### B-7 — [ ] Drop `pump_photo_url` column (destructive migration)
+#### B-7 — [x] Drop `pump_photo_url` column (destructive migration)
 **Deps:** B-6
 **TDD:**
 - Remove `pumpPhotoUrl` line from `web/lib/db/schema.ts`.

@@ -15,11 +15,14 @@ describe("gasPurchases schema", () => {
         "gallons",
         "odometer",
         "pricePerGallon",
-        "pumpPhotoUrl",
         "fuelGrade",
         "createdAt",
       ].sort(),
     );
+  });
+
+  it("pumpPhotoUrl is removed", () => {
+    expect("pumpPhotoUrl" in cols).toBe(false);
   });
 
   it("id is uuid primary key", () => {

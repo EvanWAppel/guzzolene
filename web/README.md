@@ -4,7 +4,7 @@ A public web application that turns a personal gas purchase log (tracked since D
 
 Live: **https://web-eta-six-52.vercel.app**
 
-This is the web frontend for the [Gas Economics](../) Python project. The original tool generated static Matplotlib charts locally; this version serves those same charts interactively to anyone with a browser, adds multi-user support, and uses Claude AI to extract pump data from photos.
+This is the web frontend for the [Gas Economics](../) Python project. The original tool generated static Matplotlib charts locally; this version serves those same charts interactively to anyone with a browser and adds multi-user support.
 
 ---
 
@@ -13,8 +13,6 @@ This is the web frontend for the [Gas Economics](../) Python project. The origin
 **Public home page** — anyone can visit and see the owner's gas purchase history since 2018: price per gallon over time, cost per mile vs. WTI crude oil price, total spend, and gallons pumped. Significant geopolitical events (Aramco drone attack, COVID lockdowns, Colonial Pipeline hack, Russia invading Ukraine, etc.) are marked as dashed reference lines on every chart.
 
 **User accounts** — visitors can sign up, but access is gated. New accounts land on a `/pending` page until the admin approves them. Once approved, users get their own dashboard where they can log fill-ups and generate the same charts against their own data.
-
-**Pump photo OCR** — when logging a fill-up, users can drop a photo of the gas pump display. Claude Haiku reads the image and extracts total cost, gallons, and price per gallon automatically, pre-filling the form. Users review and correct before saving.
 
 **World events overlay** — users can search Wikipedia directly from the chart page, pick an article, set a date, and pin it as a reference line on their own charts. The same feature populates the owner's public charts with the hardcoded events from the Python project.
 
@@ -56,14 +54,6 @@ WTI crude oil prices for the cost-per-mile chart are fetched from Yahoo Finance'
 
 World events appear as `<ReferenceLine>` components from Recharts — vertical dashed lines with rotated labels, staggered at four y-positions to avoid overlap.
 
-### AI OCR — Claude Haiku
-
-When a user uploads a pump photo, it goes to Vercel Blob storage first (giving it a public URL), then that URL is passed to Claude `claude-haiku-4-5` via the Anthropic SDK with a prompt asking it to extract cost, gallons, price per gallon, and date as JSON. Haiku is used here because it's fast and cheap for a simple structured extraction task — the result pre-fills the form in under two seconds.
-
-### File Storage — Vercel Blob
-
-Pump photos are stored in a Vercel Blob store with public access, so the URLs can be embedded in the database and rendered in the UI without authentication. Uploads go through an API route (`/api/upload-photo`) that checks Clerk auth before writing to the store.
-
 ### Wikipedia Integration
 
 The event search in the charts page calls the Wikipedia API directly from the browser — no backend needed, no API key required. The `searchWikipedia()` function in `lib/wikipedia.ts` hits the public `w/api.php` endpoint with `action=query&list=search`. Results show in a dropdown; the user picks one and chooses a date (Wikipedia search results don't reliably contain a single canonical date, so this is manual), and the event is saved to `world_events` via a Server Action.
@@ -84,22 +74,20 @@ web/
 │   ├── sign-in / sign-up              # Clerk-hosted auth UI
 │   ├── dashboard/                      # Auth + approval gated
 │   │   ├── page.tsx                    # Summary + overview chart
-│   │   ├── add/page.tsx                # Log a fill-up (photo + form)
+│   │   ├── add/page.tsx                # Log a fill-up
 │   │   └── visualizations/page.tsx     # Full charts + event search
 │   ├── admin/page.tsx                  # Approve / deny pending users
 │   └── api/
-│       ├── webhooks/clerk/             # Sets approved: false on sign-up
-│       ├── upload-photo/               # Writes photo to Vercel Blob
-│       └── extract-pump/               # Calls Claude Haiku for OCR
+│       └── webhooks/clerk/             # Sets approved: false on sign-up
 ├── components/
 │   ├── charts/                         # Recharts chart components
 │   ├── EventSearch.tsx                 # Wikipedia search + chart pin
 │   ├── HomeNav.tsx                     # Auth-aware nav (client)
-│   └── PumpPhotoUpload.tsx             # Drag-drop upload + OCR form
+│   ├── AddFillUpForm.tsx               # Fill-up entry form
+│   └── RecentFills.tsx                 # Dashboard recent-fills list
 ├── lib/
 │   ├── db/schema.ts                    # Drizzle table definitions
 │   ├── aggregations.ts                 # Monthly averaging logic
-│   ├── claude.ts                       # Haiku vision extraction
 │   ├── oil-prices.ts                   # Yahoo Finance WTI fetch
 │   └── wikipedia.ts                    # Wikipedia search client
 ├── actions/
@@ -121,7 +109,7 @@ npm install
 npm run dev
 ```
 
-The app runs at `http://localhost:3000`. All env vars (database, Clerk, Anthropic, Blob) come from the Vercel project — no manual `.env` editing needed after the initial pull.
+The app runs at `http://localhost:3000`. All env vars (database, Clerk) come from the Vercel project — no manual `.env` editing needed after the initial pull.
 
 ### Re-seeding Owner Data
 
@@ -143,6 +131,4 @@ This reads `../gas_purchases.csv` and re-inserts all rows (plus the 8 hardcoded 
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk (auto-provisioned) |
 | `CLERK_SECRET_KEY` | Clerk (auto-provisioned) |
 | `CLERK_WEBHOOK_SECRET` | Clerk dashboard → Webhooks → Signing Secret |
-| `BLOB_READ_WRITE_TOKEN` | Vercel dashboard → Storage → connect to project |
-| `ANTHROPIC_API_KEY` | console.anthropic.com |
 | `ADMIN_USER_ID` | Clerk dashboard → Users → your user ID |
