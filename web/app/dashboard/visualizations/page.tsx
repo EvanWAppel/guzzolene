@@ -2,20 +2,30 @@ import { listUserPurchases } from "@/actions/purchases";
 import { listUserEvents } from "@/actions/events";
 import { monthlyAvg } from "@/lib/aggregations";
 import { getMonthlyOilPrices } from "@/lib/oil-prices";
+import { parseDateRange, filterByRange, type SearchParams } from "@/lib/filters";
 import OverviewGrid from "@/components/charts/OverviewGrid";
 import PricePerGallonChart from "@/components/charts/PricePerGallonChart";
 import CostPerMileChart from "@/components/charts/CostPerMileChart";
 import MpgChart from "@/components/charts/MpgChart";
 import GpmChart from "@/components/charts/GpmChart";
 import EventSearch from "@/components/EventSearch";
+import DateRangeFilter from "@/components/DateRangeFilter";
 
-export default async function VisualizationsPage() {
+export default async function VisualizationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const range = parseDateRange(params);
+
   const [purchases, events] = await Promise.all([
     listUserPurchases(),
     listUserEvents(),
   ]);
 
-  const monthly = monthlyAvg(purchases);
+  const monthly = monthlyAvg(purchases, range ?? undefined);
+  const filteredEvents = filterByRange(events, range);
   const dates = monthly.map((m) => m.date);
   const oilPrices =
     dates.length >= 2
@@ -37,13 +47,15 @@ export default async function VisualizationsPage() {
         <EventSearch />
       </div>
 
-      <OverviewGrid data={monthly} events={events} />
-      <PricePerGallonChart data={monthly} events={events} />
-      <CostPerMileChart data={monthly} oilPrices={oilPrices} events={events} />
+      <DateRangeFilter />
+
+      <OverviewGrid data={monthly} events={filteredEvents} />
+      <PricePerGallonChart data={monthly} events={filteredEvents} />
+      <CostPerMileChart data={monthly} oilPrices={oilPrices} events={filteredEvents} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <MpgChart data={monthly} events={events} />
-        <GpmChart data={monthly} events={events} />
+        <MpgChart data={monthly} events={filteredEvents} />
+        <GpmChart data={monthly} events={filteredEvents} />
       </div>
     </div>
   );

@@ -17,8 +17,21 @@ export interface MonthlyPoint {
  * MPG and GPM are computed per fill-up from consecutive odometer readings, then averaged
  * within each month. GPM = (gallons / miles) * 100, the metric-friendly inverse of MPG.
  */
-export function monthlyAvg(purchases: GasPurchase[]): MonthlyPoint[] {
-  const sorted = [...purchases].sort((a, b) => a.date.localeCompare(b.date));
+export interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+export function monthlyAvg(purchases: GasPurchase[], range?: DateRange): MonthlyPoint[] {
+  const filtered = range
+    ? purchases.filter((p) => {
+        const d = new Date(`${p.date}T00:00:00Z`);
+        if (range.from && d < range.from) return false;
+        if (range.to && d > range.to) return false;
+        return true;
+      })
+    : purchases;
+  const sorted = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
 
   // Group by "YYYY-MM"
   const groups = new Map<string, GasPurchase[]>();

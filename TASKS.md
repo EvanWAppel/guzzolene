@@ -359,30 +359,30 @@ Depends on Stream C being complete (needs the service worker).
 
 Independent of A, B, C, D, F. Touches `app/page.tsx`, `app/dashboard/visualizations/page.tsx`, and the charts.
 
-#### E-1 — [ ] Util test: parse `from`/`to` URL query params
+#### E-1 — [x] Util test: parse `from`/`to` URL query params
 **Deps:** V-8
 **TDD:**
 - New file `web/lib/filters.ts`.
 - Failing test for `parseDateRange(searchParams)` returning `{from, to}` Date objects, or `null` for missing/invalid.
 
-#### E-2 — [ ] Implement `parseDateRange`
+#### E-2 — [x] Implement `parseDateRange`
 **Deps:** E-1
 **TDD:** pass E-1. Validate format (`YYYY-MM-DD`), reject invalid.
 
-#### E-3 — [ ] Aggregation test: filter applied to monthly data
+#### E-3 — [x] Aggregation test: filter applied to monthly data
 **Deps:** E-2
 **TDD:**
 - In `web/__tests__/lib/aggregations.test.ts`, failing test that monthly-avg helper accepts an optional `{from, to}` filter and excludes out-of-range rows.
 
-#### E-4 — [ ] Apply filter in `lib/aggregations.ts`
+#### E-4 — [x] Apply filter in `lib/aggregations.ts`
 **Deps:** E-3
 **TDD:** pass E-3.
 
-#### E-5 — [ ] Component test: filter strip renders 4 preset chips + custom range
+#### E-5 — [x] Component test: filter strip renders 4 preset chips + custom range
 **Deps:** E-4
 **TDD:** failing test rendering `<DateRangeFilter />` and asserting chips `30d`, `90d`, `1y`, `All-time` plus two date inputs.
 
-#### E-6 — [ ] Implement `<DateRangeFilter />` component
+#### E-6 — [x] Implement `<DateRangeFilter />` component
 **Deps:** E-5
 **TDD:**
 - Renders chips and date inputs.
@@ -390,20 +390,20 @@ Independent of A, B, C, D, F. Touches `app/page.tsx`, `app/dashboard/visualizati
 - Custom dates also update query params.
 - Pass E-5.
 
-#### E-7 — [ ] Wire filter into visualizations page
+#### E-7 — [x] Wire filter into visualizations page
 **Deps:** E-6
 **TDD:**
 - `web/app/dashboard/visualizations/page.tsx` reads `searchParams`, passes range to aggregation, passes filtered data to charts.
 - Manual verify: chips change the charts.
 
-#### E-8 — [ ] Wire filter into public home page
+#### E-8 — [x] Wire filter into public home page
 **Deps:** E-7
 **TDD:**
 - Same on `web/app/page.tsx`.
 - Keep `revalidate = 3600` only when no query params; when params present, force dynamic render (e.g. `dynamic = "force-dynamic"` for that branch or read with `cache: "no-store"`).
 - Acceptance: home with no params is still cached; home with params re-renders.
 
-#### E-9 — [ ] Event reference lines respect filter
+#### E-9 — [x] Event reference lines respect filter
 **Deps:** E-8
 **TDD:**
 - Failing test that an event outside the filter range is excluded from chart props.
