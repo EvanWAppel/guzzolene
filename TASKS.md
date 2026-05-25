@@ -250,43 +250,43 @@ Pure deletion + one destructive migration. Independent of all other streams.
 
 Mobile layout polish and PWA install (no offline draft capture yet — that's Stream D).
 
-#### C-1 — [ ] Component test: numeric fields have `inputmode="decimal"`
+#### C-1 — [x] Component test: numeric fields have `inputmode="decimal"`
 **Deps:** V-8
 **TDD:** failing test asserting cost/gallons/odometer inputs all have `inputMode="decimal"` and `type="number"` (or text + pattern).
 
-#### C-2 — [ ] Apply numeric input attributes
+#### C-2 — [x] Apply numeric input attributes
 **Deps:** C-1
 **TDD:** pass C-1.
 
-#### C-3 — [ ] Component test: sticky save button at viewport bottom
+#### C-3 — [x] Component test: sticky save button at viewport bottom
 **Deps:** C-2
 **TDD:** failing test asserting the submit button container has `position: sticky; bottom: 0` (or equivalent Tailwind class).
 
-#### C-4 — [ ] Apply sticky-save layout
+#### C-4 — [x] Apply sticky-save layout
 **Deps:** C-3
 **TDD:** pass C-3.
 
-#### C-5 — [ ] Single-column responsive layout audit
+#### C-5 — [x] Single-column responsive layout audit
 **Deps:** C-4
 **TDD:**
 - Manually verify on iPhone Safari at 390px width (Chrome devtools): no horizontal scroll, tap targets ≥44px, no hover-only affordances on the add form.
 - No test required (visual).
 
-#### C-6 — [ ] Add web app manifest
+#### C-6 — [x] Add web app manifest
 **Deps:** C-5
 **TDD:**
 - Create `web/public/manifest.webmanifest` with name, short_name, icons (192, 512), `start_url: "/dashboard/add"`, `display: "standalone"`, theme color.
 - Link from `web/app/layout.tsx`.
 - No test required (verify in Chrome devtools → Application → Manifest).
 
-#### C-7 — [ ] Add icons
+#### C-7 — [x] Add icons
 **Deps:** C-6
 **TDD:**
 - Generate 192px and 512px PNG icons (fuel pump motif), place in `web/public/`.
 - Reference from manifest.
 - No test required.
 
-#### C-8 — [ ] Add service worker for install
+#### C-8 — [x] Add service worker for install
 **Deps:** C-7
 **TDD:**
 - Register a minimal service worker in `web/public/sw.js` (cache app shell; no offline logic yet).

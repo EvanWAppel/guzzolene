@@ -26,4 +26,19 @@ describe("AddFillUpForm fuel-grade dropdown", () => {
     expect(screen.queryByText(/drop pump photo/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/extracting data with claude/i)).not.toBeInTheDocument();
   });
+
+  it("numeric fields use inputMode=decimal for a mobile-friendly keypad", () => {
+    render(<AddFillUpForm />);
+    for (const label of [/total cost/i, /^gallons/i, /price per gallon/i, /odometer/i]) {
+      const input = screen.getByLabelText(label) as HTMLInputElement;
+      expect(input.inputMode).toBe("decimal");
+    }
+  });
+
+  it("save button is anchored sticky to viewport bottom for one-handed use", () => {
+    render(<AddFillUpForm />);
+    const btn = screen.getByRole("button", { name: /save fill-up/i });
+    const sticky = btn.closest("[data-sticky-save]");
+    expect(sticky).not.toBeNull();
+  });
 });
