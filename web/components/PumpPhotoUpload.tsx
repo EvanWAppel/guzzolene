@@ -28,6 +28,7 @@ export default function PumpPhotoUpload() {
   const [gallons, setGallons] = useState("");
   const [pricePerGallon, setPricePerGallon] = useState("");
   const [odometer, setOdometer] = useState("");
+  const [fuelGrade, setFuelGrade] = useState("87");
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +72,7 @@ export default function PumpPhotoUpload() {
     fd.set("gallons", gallons);
     fd.set("pricePerGallon", pricePerGallon);
     fd.set("odometer", odometer);
+    fd.set("fuelGrade", fuelGrade);
     if (photoUrl) fd.set("pumpPhotoUrl", photoUrl);
     try {
       await createPurchase(fd);
@@ -85,7 +87,7 @@ export default function PumpPhotoUpload() {
       <Card>
         <CardContent className="pt-6 text-center space-y-3">
           <p className="text-lg font-medium">Fill-up logged!</p>
-          <Button onClick={() => { setSaved(false); setPhotoUrl(null); setExtracted(null); setDate(""); setCost(""); setGallons(""); setPricePerGallon(""); setOdometer(""); }}>
+          <Button onClick={() => { setSaved(false); setPhotoUrl(null); setExtracted(null); setDate(""); setCost(""); setGallons(""); setPricePerGallon(""); setOdometer(""); setFuelGrade("87"); }}>
             Log Another
           </Button>
         </CardContent>
@@ -154,6 +156,22 @@ export default function PumpPhotoUpload() {
         <div className="space-y-1">
           <Label htmlFor="odo">Odometer (mi)</Label>
           <Input id="odo" type="number" value={odometer} onChange={(e) => setOdometer(e.target.value)} placeholder="52000" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="grade">Fuel Grade</Label>
+          <select
+            id="grade"
+            name="fuelGrade"
+            value={fuelGrade}
+            onChange={(e) => setFuelGrade(e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="87">87</option>
+            <option value="89">89</option>
+            <option value="91">91</option>
+            <option value="93">93</option>
+            <option value="diesel">diesel</option>
+          </select>
         </div>
       </div>
 

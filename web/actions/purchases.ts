@@ -35,6 +35,7 @@ export async function createPurchase(formData: FormData) {
   const odometer = formData.get("odometer") as string;
   const pricePerGallon = formData.get("pricePerGallon") as string;
   const pumpPhotoUrl = formData.get("pumpPhotoUrl") as string | null;
+  const fuelGrade = (formData.get("fuelGrade") as string | null) || "87";
 
   await db.insert(gasPurchases).values({
     userId,
@@ -44,6 +45,7 @@ export async function createPurchase(formData: FormData) {
     odometer: odometer ? parseInt(odometer) : null,
     pricePerGallon: pricePerGallon || null,
     pumpPhotoUrl: pumpPhotoUrl || null,
+    fuelGrade,
   });
 
   revalidatePath("/dashboard");

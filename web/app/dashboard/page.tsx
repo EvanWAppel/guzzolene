@@ -1,6 +1,7 @@
 import { listUserPurchases } from "@/actions/purchases";
 import { monthlyAvg } from "@/lib/aggregations";
 import OverviewGrid from "@/components/charts/OverviewGrid";
+import RecentFills from "@/components/RecentFills";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -65,6 +66,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <RecentFills purchases={purchases} />
 
       <OverviewGrid data={monthly} events={[]} />
 
