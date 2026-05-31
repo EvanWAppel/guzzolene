@@ -17,9 +17,20 @@ describe("gasPurchases schema", () => {
         "odometer",
         "pricePerGallon",
         "fuelGrade",
+        "lat",
+        "lng",
         "createdAt",
       ].sort(),
     );
+  });
+
+  it("lat and lng are double precision, nullable", () => {
+    expect(cols.lat).toBeDefined();
+    expect(cols.lng).toBeDefined();
+    expect(cols.lat.columnType).toBe("PgDoublePrecision");
+    expect(cols.lng.columnType).toBe("PgDoublePrecision");
+    expect(cols.lat.notNull).toBe(false);
+    expect(cols.lng.notNull).toBe(false);
   });
 
   it("pumpPhotoUrl is removed", () => {

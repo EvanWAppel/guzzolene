@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, date, numeric, integer, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, date, numeric, integer, timestamp, unique, doublePrecision } from "drizzle-orm/pg-core";
 
 export const gasPurchases = pgTable("gas_purchases", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -9,6 +9,8 @@ export const gasPurchases = pgTable("gas_purchases", {
   odometer: integer("odometer"),
   pricePerGallon: numeric("price_per_gallon", { precision: 6, scale: 3 }),
   fuelGrade: text("fuel_grade").notNull().default("87"),
+  lat: doublePrecision("lat"),
+  lng: doublePrecision("lng"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

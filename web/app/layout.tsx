@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import PWARegister from "@/components/PWARegister";
@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Gas Economics",
   description: "Personal gas purchase tracker and analytics",
   manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
   themeColor: "#E91E63",
 };
 

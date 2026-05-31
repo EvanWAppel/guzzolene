@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPurchase } from "@/actions/purchases";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ export default function AddFillUpForm() {
   const [pricePerGallon, setPricePerGallon] = useState("");
   const [odometer, setOdometer] = useState("");
   const [fuelGrade, setFuelGrade] = useState("87");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setCoords(null),
+    );
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +37,10 @@ export default function AddFillUpForm() {
     fd.set("pricePerGallon", pricePerGallon);
     fd.set("odometer", odometer);
     fd.set("fuelGrade", fuelGrade);
+    if (coords) {
+      fd.set("lat", String(coords.lat));
+      fd.set("lng", String(coords.lng));
+    }
     try {
       await createPurchase(fd);
       setSaved(true);

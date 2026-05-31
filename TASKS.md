@@ -127,70 +127,70 @@ Smallest meaningful change that exercises the full stack (schema → server acti
 
 Adds geolocation (lat/lng) and edit/delete to fill-ups.
 
-#### A-1 — [ ] Schema test for `lat` and `lng` columns
+#### A-1 — [x] Schema test for `lat` and `lng` columns
 **Deps:** V-8
 **TDD:** failing test asserting `gasPurchases.lat` and `lng` are `double precision`, nullable.
 
-#### A-2 — [ ] Add `lat`/`lng` columns to schema + migrate
+#### A-2 — [x] Add `lat`/`lng` columns to schema + migrate
 **Deps:** A-1
 **TDD:**
 - Add `lat: doublePrecision("lat")`, `lng: doublePrecision("lng")` to schema.
 - `npm run db:generate`, `npm run db:push`.
 - A-1 passes.
 
-#### A-3 — [ ] Server action test: insert with `lat`/`lng`
+#### A-3 — [x] Server action test: insert with `lat`/`lng`
 **Deps:** A-2
 **TDD:** failing test calling `createPurchase` with coords, asserting both persist.
 
-#### A-4 — [ ] Wire `lat`/`lng` into `createPurchase`
+#### A-4 — [x] Wire `lat`/`lng` into `createPurchase`
 **Deps:** A-3
 **TDD:** implement to pass A-3.
 
-#### A-5 — [ ] Component test: geolocation prompt on form mount
+#### A-5 — [x] Component test: geolocation prompt on form mount
 **Deps:** A-4
 **TDD:**
 - Mock `navigator.geolocation.getCurrentPosition` to resolve with `{coords: {latitude: 41.0, longitude: -71.0}}`.
 - Failing test asserting the form requests location on mount and stores it in form state.
 
-#### A-6 — [ ] Implement geolocation capture in form
+#### A-6 — [x] Implement geolocation capture in form
 **Deps:** A-5
 **TDD:** call `navigator.geolocation.getCurrentPosition` on mount, store in state, include in submit. Handle permission-denied silently (do not block submit).
 
-#### A-7 — [ ] Component test: form submits without coords if permission denied
+#### A-7 — [x] Component test: form submits without coords if permission denied
 **Deps:** A-6
 **TDD:**
 - Mock `getCurrentPosition` to call error callback.
 - Failing test asserting submit still works, payload omits coords.
 
-#### A-8 — [ ] Implement permission-denied fallback
+#### A-8 — [x] Implement permission-denied fallback
 **Deps:** A-7
 **TDD:** pass A-7.
 
-#### A-9 — [ ] Server action test: `updatePurchase` enforces ownership
+#### A-9 — [x] Server action test: `updatePurchase` enforces ownership
 **Deps:** A-8
 **TDD:** failing test that calling `updatePurchase(id, ...)` with a userId mismatching the row's userId throws.
 
-#### A-10 — [ ] Implement `updatePurchase` server action
+#### A-10 — [x] Implement `updatePurchase` server action
 **Deps:** A-9
 **TDD:** add to `web/actions/purchases.ts`. Owner (Clerk role `admin`) may update `user_id = null` rows.
 
-#### A-11 — [ ] Server action test: `deletePurchase` enforces ownership
+#### A-11 — [x] Server action test: `deletePurchase` enforces ownership
 **Deps:** A-10
 **TDD:** mirror A-9 for delete.
 
-#### A-12 — [ ] Implement `deletePurchase` server action
+#### A-12 — [x] Implement `deletePurchase` server action
 **Deps:** A-11
 **TDD:** pass A-11.
 
-#### A-13 — [ ] Component test: edit button opens prefilled form
+#### A-13 — [x] Component test: edit button opens prefilled form
 **Deps:** A-12
 **TDD:** failing test on a row component asserting an edit button renders, and clicking it puts the row into edit mode with values prefilled.
 
-#### A-14 — [ ] Component test: delete confirms then calls action
+#### A-14 — [x] Component test: delete confirms then calls action
 **Deps:** A-12
 **TDD:** failing test that a delete button triggers a confirm prompt and on confirm calls `deletePurchase`.
 
-#### A-15 — [ ] Implement edit/delete UI on dashboard rows
+#### A-15 — [x] Implement edit/delete UI on dashboard rows
 **Deps:** A-13, A-14
 **TDD:** pass both.
 - Manually verify: edit a fill-up's odometer, delete a row, both reflect in DB.
