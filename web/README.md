@@ -2,7 +2,7 @@
 
 A public web application that turns a personal gas purchase log (tracked since December 2018) into interactive charts — and lets approved users track their own fuel data with the same visualizations.
 
-Live: **https://web-eta-six-52.vercel.app**
+Live: **https://guzzo-lene.com**
 
 This is the web frontend for the [Gas Economics](../) Python project. The original tool generated static Matplotlib charts locally; this version serves those same charts interactively to anyone with a browser and adds multi-user support.
 
