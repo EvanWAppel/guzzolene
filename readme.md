@@ -2,6 +2,10 @@
 
 My friend Christine thinks that gasoline has become diluted since the Iran war started. This project tracks my personal gas purchase history for my Mazda 3 Sport to see whether fuel economy has measurably changed — and to put price swings in the context of the geopolitical events that caused them.
 
+## Web App
+
+The interactive successor to this Python tool lives in [`web/`](web/) — a Next.js app with the same charts served publicly, multi-user fill-up tracking, date-range filters, editable events, and an installable PWA with offline capture. Live at **https://web-eta-six-52.vercel.app**. See [`web/README.md`](web/README.md) for details. The Python code below is frozen as a historical reference.
+
 ---
 
 ## Quickstart

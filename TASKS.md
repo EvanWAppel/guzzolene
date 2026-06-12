@@ -485,7 +485,7 @@ Independent of A, B, C, D, E. Touches `actions/events.ts`, `components/EventSear
 
 ## Phase 3 — Wrap-up
 
-#### W-1 — [ ] Update `web/README.md` to reflect new state
+#### W-1 — [x] Update `web/README.md` to reflect new state
 **Deps:** all of Phase 2
 **TDD:**
 - Remove OCR section.
@@ -494,7 +494,7 @@ Independent of A, B, C, D, E. Touches `actions/events.ts`, `components/EventSear
 - Add filter behavior to chart section.
 - Add edit/delete to feature list.
 
-#### W-2 — [ ] Update root `readme.md` if needed
+#### W-2 — [x] Update root `readme.md` if needed
 **Deps:** W-1
 
 #### W-3 — [ ] Run full test suite + Lighthouse + manual smoke
