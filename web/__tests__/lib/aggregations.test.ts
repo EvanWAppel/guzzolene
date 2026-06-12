@@ -12,6 +12,8 @@ function p(date: string, overrides: Partial<GasPurchase> = {}): GasPurchase {
     odometer: 10000,
     pricePerGallon: "4.000",
     fuelGrade: "87",
+    lat: null,
+    lng: null,
     createdAt: new Date(),
     ...overrides,
   };

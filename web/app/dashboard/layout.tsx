@@ -3,6 +3,7 @@ import { UserButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import OutboxSync from "@/components/OutboxSync";
 
 export default async function DashboardLayout({
   children,
@@ -43,7 +44,10 @@ export default async function DashboardLayout({
         </div>
         <UserButton />
       </header>
-      <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
+      <main className="max-w-6xl mx-auto px-6 py-8 space-y-4">
+        <OutboxSync />
+        {children}
+      </main>
     </div>
   );
 }

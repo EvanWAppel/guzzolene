@@ -6,10 +6,18 @@ vi.mock("@/actions/purchases", () => ({
   createPurchase: (fd: FormData) => createPurchaseMock(fd),
 }));
 
+const saveDraftMock = vi.fn<(draft: unknown) => Promise<number>>(async () => 1);
+vi.mock("@/lib/offline-outbox", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/offline-outbox")>()),
+  saveDraft: (draft: unknown) => saveDraftMock(draft),
+}));
+
 import AddFillUpForm from "@/components/AddFillUpForm";
 
 beforeEach(() => {
   createPurchaseMock.mockClear();
+  saveDraftMock.mockClear();
+  Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
 });
 
 afterEach(() => {
@@ -116,5 +124,53 @@ describe("AddFillUpForm geolocation capture", () => {
     const fd = createPurchaseMock.mock.calls[0][0] as FormData;
     expect(fd.has("lat")).toBe(false);
     expect(fd.has("lng")).toBe(false);
+  });
+});
+
+describe("AddFillUpForm offline capture", () => {
+  function fillFields() {
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2026-06-11" } });
+    fireEvent.change(screen.getByLabelText(/total cost/i), { target: { value: "45.00" } });
+    fireEvent.change(screen.getByLabelText(/^gallons/i), { target: { value: "12.5" } });
+    fireEvent.change(screen.getByLabelText(/price per gallon/i), { target: { value: "3.60" } });
+    fireEvent.change(screen.getByLabelText(/odometer/i), { target: { value: "82000" } });
+  }
+
+  it("offline submit saves a draft to the outbox instead of calling the server action", async () => {
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: false });
+    render(<AddFillUpForm />);
+
+    fillFields();
+    fireEvent.click(screen.getByRole("button", { name: /save fill-up/i }));
+
+    await waitFor(() => expect(saveDraftMock).toHaveBeenCalledTimes(1));
+    expect(createPurchaseMock).not.toHaveBeenCalled();
+
+    expect(saveDraftMock.mock.calls[0][0]).toMatchObject({
+      date: "2026-06-11",
+      cost: "45.00",
+      gallons: "12.5",
+      pricePerGallon: "3.60",
+      odometer: "82000",
+      fuelGrade: "87",
+    });
+  });
+
+  it("shows a queued indicator after an offline submit", async () => {
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: false });
+    render(<AddFillUpForm />);
+
+    fillFields();
+    fireEvent.click(screen.getByRole("button", { name: /save fill-up/i }));
+
+    expect(await screen.findByText(/queued — will sync when online/i)).toBeInTheDocument();
+  });
+
+  it("online submit still calls the server action, not the outbox", async () => {
+    render(<AddFillUpForm />);
+
+    await fillRequiredFieldsAndSubmit();
+
+    expect(saveDraftMock).not.toHaveBeenCalled();
   });
 });

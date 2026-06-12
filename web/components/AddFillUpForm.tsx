@@ -2,14 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { createPurchase } from "@/actions/purchases";
+import { saveDraft } from "@/lib/offline-outbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
+/* Ask the service worker to replay the outbox when connectivity returns
+ * (D-8). Feature-detected: browsers without SyncManager fall back to the
+ * online-event trigger in OutboxSync. */
+async function registerBackgroundSync() {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  if ("sync" in reg) {
+    await (reg as ServiceWorkerRegistration & { sync: { register(tag: string): Promise<void> } })
+      .sync.register("drain-outbox");
+  }
+}
+
 export default function AddFillUpForm() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [queued, setQueued] = useState(false);
 
   const [date, setDate] = useState("");
   const [cost, setCost] = useState("");
@@ -30,18 +44,34 @@ export default function AddFillUpForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const fd = new FormData();
-    fd.set("date", date);
-    fd.set("cost", cost);
-    fd.set("gallons", gallons);
-    fd.set("pricePerGallon", pricePerGallon);
-    fd.set("odometer", odometer);
-    fd.set("fuelGrade", fuelGrade);
-    if (coords) {
-      fd.set("lat", String(coords.lat));
-      fd.set("lng", String(coords.lng));
-    }
     try {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        await saveDraft({
+          date,
+          cost,
+          gallons,
+          pricePerGallon,
+          odometer,
+          fuelGrade,
+          lat: coords?.lat,
+          lng: coords?.lng,
+        });
+        setQueued(true);
+        setSaved(true);
+        await registerBackgroundSync();
+        return;
+      }
+      const fd = new FormData();
+      fd.set("date", date);
+      fd.set("cost", cost);
+      fd.set("gallons", gallons);
+      fd.set("pricePerGallon", pricePerGallon);
+      fd.set("odometer", odometer);
+      fd.set("fuelGrade", fuelGrade);
+      if (coords) {
+        fd.set("lat", String(coords.lat));
+        fd.set("lng", String(coords.lng));
+      }
       await createPurchase(fd);
       setSaved(true);
     } finally {
@@ -51,6 +81,7 @@ export default function AddFillUpForm() {
 
   function reset() {
     setSaved(false);
+    setQueued(false);
     setDate("");
     setCost("");
     setGallons("");
@@ -63,7 +94,10 @@ export default function AddFillUpForm() {
     return (
       <Card>
         <CardContent className="pt-6 text-center space-y-3">
-          <p className="text-lg font-medium">Fill-up logged!</p>
+          <p className="text-lg font-medium">{queued ? "Fill-up queued!" : "Fill-up logged!"}</p>
+          {queued && (
+            <p className="text-sm text-muted-foreground">Queued — will sync when online</p>
+          )}
           <Button onClick={reset}>Log Another</Button>
         </CardContent>
       </Card>

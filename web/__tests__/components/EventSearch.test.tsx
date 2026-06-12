@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 const { saveEvent } = vi.hoisted(() => ({
-  saveEvent: vi.fn(async () => undefined),
+  saveEvent: vi.fn<(fd: FormData) => Promise<void>>(async () => undefined),
 }));
 const { searchWikipedia } = vi.hoisted(() => ({
   searchWikipedia: vi.fn(async () => [

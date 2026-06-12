@@ -293,7 +293,7 @@ Mobile layout polish and PWA install (no offline draft capture yet — that's St
 - Register from a client-side bootstrap in `layout.tsx` or a dedicated client component.
 - No test required (verify in Chrome devtools → Application → Service Workers shows "activated").
 
-#### C-9 — [ ] Lighthouse PWA audit ≥ 90
+#### C-9 — [x] Lighthouse PWA audit ≥ 90
 **Deps:** C-8
 **TDD:**
 - Run Lighthouse against `npm run build && npm run start`.
@@ -306,41 +306,41 @@ Mobile layout polish and PWA install (no offline draft capture yet — that's St
 
 Depends on Stream C being complete (needs the service worker).
 
-#### D-1 — [ ] Helper test: draft saved to IndexedDB
+#### D-1 — [x] Helper test: draft saved to IndexedDB
 **Deps:** C-9
 **TDD:**
 - Use `fake-indexeddb` for tests (add dev dep).
 - Failing test: calling `saveDraft({date, cost, gallons, ...})` writes to an `outbox` object store.
 
-#### D-2 — [ ] Implement `saveDraft` and `listDrafts` helpers
+#### D-2 — [x] Implement `saveDraft` and `listDrafts` helpers
 **Deps:** D-1
 **TDD:** pass D-1. Place in `web/lib/offline-outbox.ts`.
 
-#### D-3 — [ ] Form test: offline submit goes to outbox
+#### D-3 — [x] Form test: offline submit goes to outbox
 **Deps:** D-2
 **TDD:**
 - Mock `navigator.onLine = false`.
 - Failing test that submitting the form calls `saveDraft` and not the server action.
 
-#### D-4 — [ ] Wire form to outbox when offline
+#### D-4 — [x] Wire form to outbox when offline
 **Deps:** D-3
 **TDD:** pass D-3. Show a "Queued — will sync when online" indicator.
 
-#### D-5 — [ ] Helper test: drain outbox to server
+#### D-5 — [x] Helper test: drain outbox to server
 **Deps:** D-4
 **TDD:**
 - Failing test that `drainOutbox()` reads pending drafts and calls `createPurchase` for each, deleting on success.
 
-#### D-6 — [ ] Implement `drainOutbox`
+#### D-6 — [x] Implement `drainOutbox`
 **Deps:** D-5
 **TDD:** pass D-5. Errors must surface (per `claude.md` — do not silently retry forever); failed drafts stay in outbox with a visible error.
 
-#### D-7 — [ ] Trigger drain on `online` event + on dashboard mount
+#### D-7 — [x] Trigger drain on `online` event + on dashboard mount
 **Deps:** D-6
 **TDD:**
 - Failing integration test (jsdom event dispatch) that firing `window.dispatchEvent(new Event("online"))` calls drain.
 
-#### D-8 — [ ] Background sync (optional, if SW supports it)
+#### D-8 — [x] Background sync (optional, if SW supports it)
 **Deps:** D-7
 **TDD:**
 - If browser supports `SyncManager`, register a `background-sync` tag in the SW that triggers drain.
