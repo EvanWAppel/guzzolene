@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { searchWikipedia, type WikiSearchResult } from "@/lib/wikipedia";
+import { searchWikipedia } from "@/actions/wikipedia";
+import { type WikiSearchResult } from "@/lib/wikipedia";
 import { saveEvent } from "@/actions/events";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ export default function EventSearch({ isAdmin = false }: { isAdmin?: boolean }) 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WikiSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState<WikiSearchResult | null>(null);
   const [date, setDate] = useState("");
   const [pinToPublic, setPinToPublic] = useState(false);
@@ -26,9 +29,16 @@ export default function EventSearch({ isAdmin = false }: { isAdmin?: boolean }) 
   async function handleSearch() {
     if (!query.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await searchWikipedia(query);
       setResults(res);
+      setSearched(true);
+    } catch (err) {
+      console.error("Wikipedia search failed", err);
+      setError(err instanceof Error ? err.message : "Search failed");
+      setResults([]);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
@@ -72,6 +82,16 @@ export default function EventSearch({ isAdmin = false }: { isAdmin?: boolean }) 
           {loading ? "…" : "Search"}
         </Button>
       </div>
+
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      {searched && !error && results.length === 0 && (
+        <p className="text-sm text-muted-foreground">No results found.</p>
+      )}
 
       {results.length > 0 && (
         <ul className="border rounded-md divide-y max-h-60 overflow-y-auto text-sm">

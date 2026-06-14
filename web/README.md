@@ -60,7 +60,7 @@ World events appear as `<ReferenceLine>` components from Recharts — vertical d
 
 ### Wikipedia Integration
 
-The event search in the charts page calls the Wikipedia API directly from the browser — no backend needed, no API key required. The `searchWikipedia()` function in `lib/wikipedia.ts` hits the public `w/api.php` endpoint with `action=query&list=search`. Results show in a dropdown; the user picks one and chooses a date (Wikipedia search results don't reliably contain a single canonical date, so this is manual), and the event is saved to `world_events` via a Server Action.
+The event search in the charts page calls the Wikipedia API through a Server Action (`searchWikipedia()` in `actions/wikipedia.ts`), which hits the public `w/api.php` endpoint with `action=query&list=search`. Running the fetch server-side (rather than directly from the browser) avoids cross-origin and content-blocker failures seen in installed iOS PWAs, and no API key is required. Results show in a dropdown; the user picks one and chooses a date (Wikipedia search results don't reliably contain a single canonical date, so this is manual), and the event is saved to `world_events` via another Server Action. Search errors and empty results are surfaced in the UI.
 
 ### PWA — Manifest, Service Worker, Offline Outbox
 

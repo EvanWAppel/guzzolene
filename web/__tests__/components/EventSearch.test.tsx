@@ -11,7 +11,7 @@ const { searchWikipedia } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/actions/events", () => ({ saveEvent }));
-vi.mock("@/lib/wikipedia", () => ({ searchWikipedia }));
+vi.mock("@/actions/wikipedia", () => ({ searchWikipedia }));
 
 import EventSearch from "@/components/EventSearch";
 
@@ -47,5 +47,29 @@ describe("EventSearch pin-to-public-home toggle", () => {
     expect(saveEvent).toHaveBeenCalledOnce();
     const fd = saveEvent.mock.calls[0][0] as FormData;
     expect(fd.get("pinToPublic")).toBe("1");
+  });
+});
+
+describe("EventSearch result states", () => {
+  it("surfaces an error message when the search fails", async () => {
+    searchWikipedia.mockRejectedValueOnce(new Error("Wikipedia search failed: 503"));
+    render(<EventSearch />);
+    fireEvent.change(screen.getByPlaceholderText(/search wikipedia/i), {
+      target: { value: "iran" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/wikipedia search failed/i);
+  });
+
+  it("shows a no-results message when the search returns nothing", async () => {
+    searchWikipedia.mockResolvedValueOnce([]);
+    render(<EventSearch />);
+    fireEvent.change(screen.getByPlaceholderText(/search wikipedia/i), {
+      target: { value: "zzzznomatches" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+
+    expect(await screen.findByText(/no results found/i)).toBeInTheDocument();
   });
 });
