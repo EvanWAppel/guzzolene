@@ -353,6 +353,15 @@ Depends on Stream C being complete (needs the service worker).
 - Airplane-mode the device, fill the form, submit, re-enable network — row appears in DB without user intervention.
 - Document in PR.
 
+> **KNOWN GAP (deferred 2026-06-13):** the installed PWA cannot open offline.
+> `public/sw.js` has a no-op `fetch` handler — C-8 ("cache app shell") was
+> marked done but never actually caches the shell, so launching the app in
+> airplane mode shows iOS's "not connected to the Internet" error and the
+> outbox is unreachable. The IndexedDB outbox + sync code (D-1…D-8) is correct
+> and tested; it just can't be reached offline until the SW caches the app
+> shell (network-first navigation + `/_next/static` precache). Revisit C-8/D-9
+> together. User chose to defer rather than iterate on-device.
+
 ---
 
 ### Stream E — Date-range filters (visualizations)
