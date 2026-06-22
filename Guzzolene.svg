@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 180 180">
+  <defs>
+    <clipPath id="g-clip"><rect width="180" height="180" rx="40" ry="40"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#g-clip)">
+    <rect width="180" height="180" fill="#C04A16"></rect>
+    <circle cx="90" cy="112" r="70" fill="none" stroke="#EDD0A0" stroke-width="1" opacity="0.3"></circle>
+    <path d="M 24 112 A 66 66 0 0 0 156 112" fill="none" stroke="#EDD0A0" stroke-width="3.5" stroke-linecap="round"></path>
+    <line x1="24" y1="112" x2="38" y2="112" stroke="#EDD0A0" stroke-width="2.5" stroke-linecap="round"></line>
+    <line x1="43" y1="65" x2="51" y2="73" stroke="#EDD0A0" stroke-width="2.5" stroke-linecap="round"></line>
+    <line x1="90" y1="46" x2="90" y2="60" stroke="#EDD0A0" stroke-width="2.5" stroke-linecap="round"></line>
+    <line x1="137" y1="65" x2="129" y2="73" stroke="#EDD0A0" stroke-width="2.5" stroke-linecap="round"></line>
+    <line x1="156" y1="112" x2="142" y2="112" stroke="#EDD0A0" stroke-width="2.5" stroke-linecap="round"></line>
+    <text x="18" y="133" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#EDD0A0" text-anchor="middle">E</text>
+    <text x="162" y="133" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#EDD0A0" text-anchor="middle">F</text>
+    <circle cx="90" cy="112" r="7" fill="#EDD0A0"></circle>
+    <circle cx="90" cy="112" r="4" fill="#C04A16"></circle>
+    <line x1="90" y1="112" x2="30" y2="106" stroke="#EDD0A0" stroke-width="4" stroke-linecap="round"></line>
+    <path d="M 60 70 L 70 82 L 65 97 L 78 109" fill="none" stroke="#7A2806" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M 60 70 L 70 82 L 65 97 L 78 109" fill="none" stroke="#F5D0A0" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"></path>
+  </g>
+</svg>
