@@ -583,6 +583,7 @@ never be transmitted on `/` or `/demo` — the server omits the columns, not the
 #### G-16 — [x] Implement demo read overlay
 **Deps:** G-15
 **Done:** `web/components/DemoDashboard.tsx` (client) renders the real dashboard shell (summary cards, RecentFills, OverviewGrid) from `mergeOverlay(base, overlay)`; `web/app/demo/page.tsx` is the public, no-auth route supplying the stripped base + events.
+**Fix (found during W-5):** `/demo` was being caught by the Clerk auth gate in `web/proxy.ts` (it wasn't in the public matcher) and would have redirected anonymous visitors to sign-in. Added `/demo` to `PUBLIC_ROUTES` (now exported) + `web/__tests__/proxy.test.ts` guarding that `/` and `/demo` stay public and `/dashboard` never does.
 
 #### G-17 — [x] Test: demo write lands in sandbox, not `gas_purchases`
 **Deps:** G-16
@@ -666,9 +667,9 @@ never be transmitted on `/` or `/demo` — the server omits the columns, not the
 - Re-run smoke against the prod URL.
 - Confirm public home renders, owner login works, dashboard works.
 
-#### W-5 — [ ] Showcase + demo: docs + production deploy
+#### W-5 — [~] Showcase + demo: docs + production deploy
 **Deps:** G-27
 **TDD:**
-- Update `web/README.md` and root `readme.md`: describe the showcase home, `/demo`, the privacy invariant, and the demo sandbox.
-- Confirm owner-supplied identity content is in place (name, bio, links, real `resume.pdf`) — not placeholders.
-- Deploy to Vercel production; smoke `/` and `/demo` on the prod URL (real data, no location, fresh-session reset).
+- ✅ Docs done: `web/README.md` (intro, What It Does, a "Recruiter Showcase & Read-Only Demo" build section, Project Structure, proxy public routes) and root `readme.md` Web App paragraph now describe the showcase home, `/demo`, the privacy invariant, and the sessionStorage sandbox.
+- ✅ Identity content in place (Evan Appel, links, `web/public/resume.pdf` = AI-engineer résumé) — not placeholders.
+- ⏳ Remaining: deploy to Vercel production; smoke `/` and `/demo` on the prod URL (real data, no location, fresh-session reset). Blocked on G-26/G-27 local verification first.

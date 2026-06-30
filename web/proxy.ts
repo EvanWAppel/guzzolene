@@ -1,13 +1,18 @@
 import { clerkMiddleware, clerkClient, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
+// Anonymous-accessible routes. `/` and `/demo` are the public recruiter
+// surfaces (PRD §5.4); everything else falls through to the auth gate below.
+export const PUBLIC_ROUTES = [
   "/",
+  "/demo",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/pending",
   "/api/webhooks(.*)",
-]);
+];
+
+const isPublicRoute = createRouteMatcher(PUBLIC_ROUTES);
 
 export const proxy = clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return;

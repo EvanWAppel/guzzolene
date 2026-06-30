@@ -1,6 +1,6 @@
 # Gas Economics — Web App
 
-A public web application that turns a personal gas purchase log (tracked since December 2018) into interactive charts — and lets approved users track their own fuel data with the same visualizations.
+A public web application that turns a personal gas purchase log (tracked since December 2018) into interactive charts — and lets approved users track their own fuel data with the same visualizations. The public surface doubles as a portfolio showcase: a product-first landing page plus a read-only demo recruiters can click through without signing in.
 
 Live: **https://guzzo-lene.com**
 
@@ -10,7 +10,11 @@ This is the web frontend for the [Gas Economics](../) Python project. The origin
 
 ## What It Does
 
-**Public home page** — anyone can visit and see the owner's gas purchase history since 2018: price per gallon over time, cost per mile vs. WTI crude oil price, total spend, and gallons pumped. Significant geopolitical events (Aramco drone attack, COVID lockdowns, Colonial Pipeline hack, Russia invading Ukraine, etc.) are marked as dashed reference lines on every chart.
+**Showcase home page** — anyone can visit `/` and see the owner's gas purchase history since 2018: price per gallon over time, cost per mile vs. WTI crude oil price, total spend, and gallons pumped. Significant geopolitical events (Aramco drone attack, COVID lockdowns, Colonial Pipeline hack, Russia invading Ukraine, etc.) are marked as dashed reference lines on every chart. The page is framed as a portfolio piece: a product-first hero, the live charts, then a below-the-fold case study (tech stack, an architecture diagram, the key build decisions, a link to this repo) and an identity footer (GitHub, LinkedIn, résumé, email).
+
+**Read-only demo** — anyone can open `/demo` (no sign-in) and use the real dashboard UI against the owner's real data: summary cards, the recent-fills list, and the overview chart. Visitors can add, edit, and delete fill-ups and watch the charts update — but every change is sandboxed in their own browser (see *Read-only demo* under How It's Built). A persistent banner makes the read-only state clear, and a "Reset demo" control wipes the sandbox.
+
+**Location privacy** — fill-ups can store the GPS location of the pump, but coordinates are **never sent to an unauthenticated visitor**. The public home and the demo both read through `lib/public-data.ts`, which strips `lat`/`lng` at the database query — not just in the UI.
 
 **User accounts** — visitors can sign up, but access is gated. New accounts land on a `/pending` page until the admin approves them. Once approved, users get their own dashboard where they can log fill-ups (date, cost, gallons, price per gallon, odometer, fuel grade, and optionally the GPS location of the pump) and generate the same charts against their own data. Every fill-up can be edited or deleted from the dashboard afterward.
 
@@ -68,9 +72,20 @@ The event search in the charts page calls the Wikipedia API through a Server Act
 
 Offline support is an outbox, not a full offline app: when the add form detects `navigator.onLine === false`, the draft goes into an IndexedDB `outbox` store (`lib/offline-outbox.ts`) instead of the server action. `components/OutboxSync.tsx` (mounted in the dashboard layout) drains the outbox through `createPurchase` on mount, on the `online` event, and on a background-sync message from the service worker. Successful drafts are deleted; failures stay queued with the error displayed.
 
+### Recruiter Showcase & Read-Only Demo
+
+The public home (`/`) is composed of small presentational components — `ShowcaseHero`, `TechBadges`, `ArchitectureDiagram` (accessible HTML/CSS, not an image), `CaseStudy`, `SiteFooter` — above and below the reused chart components. The charts are fed by `listPublicPurchases()` in `lib/public-data.ts`, which projects an explicit column set that **omits `lat`/`lng`**, enforcing the location-privacy invariant at the query rather than the view.
+
+The demo (`/demo`) lets an anonymous visitor exercise the dashboard without an account. Its design is recorded in [`docs/adr-demo-sandbox.md`](docs/adr-demo-sandbox.md). The key decision: **there is no server write path from the demo.** The page server-renders the same location-stripped base data and hands it to a client component (`DemoDashboard`) that holds the visitor's changes in a **`sessionStorage` overlay** (`lib/demo-overlay.ts`):
+
+- **Reads** = the owner's real history, location stripped.
+- **Writes** (add / edit / delete) live only in the overlay and are merged over the base on the client — base rows get edit-overrides or delete-tombstones; new rows are appended. The reused `AddFillUpForm` and `RecentFills` accept optional demo callbacks that route mutations to the overlay instead of the server actions.
+- **Reset** = `sessionStorage` clears when the tab closes (so a fresh session starts from the base only), plus a 24h soft TTL and an explicit "Reset demo" button.
+- Because nothing reaches the server, the owner's real `gas_purchases` data is *structurally* untouchable — not guarded by a permission check. That also means there is no anonymous write surface to rate-limit; the only cap is a per-session overlay size limit. Geolocation, if granted, is captured by the form but discarded in demo mode.
+
 ### Route Protection — Proxy
 
-Next.js 16 replaced `middleware.ts` with `proxy.ts`. The `proxy` function wraps Clerk's `clerkMiddleware`, which runs on every non-public request before the page renders. Public routes (home, sign-in, sign-up, pending, webhook) are matched with `createRouteMatcher` and let through. Everything else requires a valid Clerk session with `approved: true` or `role: admin`.
+Next.js 16 replaced `middleware.ts` with `proxy.ts`. The `proxy` function wraps Clerk's `clerkMiddleware`, which runs on every non-public request before the page renders. Public routes — exported as `PUBLIC_ROUTES` (home `/`, the demo `/demo`, sign-in, sign-up, pending, webhook) — are matched with `createRouteMatcher` and let through. Everything else requires a valid Clerk session with `approved: true` or `role: admin`.
 
 ---
 
@@ -79,7 +94,8 @@ Next.js 16 replaced `middleware.ts` with `proxy.ts`. The `proxy` function wraps 
 ```
 web/
 ├── app/
-│   ├── page.tsx                        # Public home — owner's charts
+│   ├── page.tsx                        # Showcase home — hero, charts, case study, footer
+│   ├── demo/page.tsx                   # Public read-only demo (no auth)
 │   ├── pending/page.tsx                # Awaiting approval screen
 │   ├── sign-in / sign-up              # Clerk-hosted auth UI
 │   ├── dashboard/                      # Auth + approval gated
@@ -91,16 +107,24 @@ web/
 │       └── webhooks/clerk/             # Sets approved: false on sign-up
 ├── components/
 │   ├── charts/                         # Recharts chart components
+│   ├── ShowcaseHero.tsx                # Product-first hero (home)
+│   ├── TechBadges.tsx                  # "Built with" stack strip (home)
+│   ├── ArchitectureDiagram.tsx         # Accessible HTML/CSS system diagram (home)
+│   ├── CaseStudy.tsx                   # Decisions/tradeoffs + source link (home)
+│   ├── SiteFooter.tsx                  # Identity + links + demo CTA (home)
+│   ├── DemoDashboard.tsx               # Demo orchestrator over the sandbox overlay
 │   ├── DateRangeFilter.tsx             # Preset chips + custom range (URL-driven)
 │   ├── EventSearch.tsx                 # Wikipedia search + chart pin
 │   ├── EventList.tsx                   # Pinned events with edit/delete
 │   ├── HomeNav.tsx                     # Auth-aware nav (client)
-│   ├── AddFillUpForm.tsx               # Fill-up entry form (geo + offline queue)
+│   ├── AddFillUpForm.tsx               # Fill-up entry form (geo + offline queue; demo callback)
 │   ├── OutboxSync.tsx                  # Drains offline outbox on dashboard
 │   ├── PWARegister.tsx                 # Service worker registration
-│   └── RecentFills.tsx                 # Recent fills with edit/delete
+│   └── RecentFills.tsx                 # Recent fills with edit/delete (demo callbacks)
 ├── lib/
 │   ├── db/schema.ts                    # Drizzle table definitions
+│   ├── public-data.ts                  # Location-stripped read for public/demo surfaces
+│   ├── demo-overlay.ts                 # Client-side sessionStorage demo sandbox
 │   ├── aggregations.ts                 # Monthly averaging logic
 │   ├── filters.ts                      # Date-range query param parsing
 │   ├── offline-outbox.ts               # IndexedDB draft queue
@@ -110,10 +134,13 @@ web/
 │   ├── purchases.ts                    # CRUD for gas_purchases
 │   ├── events.ts                       # CRUD for world_events
 │   └── admin.ts                        # Approve / deny via Clerk API
+├── docs/
+│   └── adr-demo-sandbox.md             # ADR: demo sandbox storage decision
 ├── public/
 │   ├── manifest.webmanifest            # PWA manifest
+│   ├── resume.pdf                      # Bundled résumé (linked from the footer)
 │   └── sw.js                           # Service worker (install + background sync)
-├── proxy.ts                            # Route protection
+├── proxy.ts                            # Route protection (exports PUBLIC_ROUTES)
 └── seed/
     ├── seed-owner.ts                   # One-time CSV import (purchases)
     └── seed-owner-events.ts            # Owner's public events (idempotent upsert)
