@@ -6,6 +6,11 @@ import { gasPurchases } from "@/lib/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Full owner read (all columns, incl. lat/lng). For authenticated/admin contexts
+ * ONLY. Public/demo surfaces must use `listPublicPurchases` from
+ * `@/lib/public-data`, which strips location (PRD §5.4.2).
+ */
 export async function listOwnerPurchases() {
   return db
     .select()

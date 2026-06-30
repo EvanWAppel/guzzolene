@@ -1,5 +1,13 @@
 import type { GasPurchase } from "./db/schema";
 
+/**
+ * monthlyAvg only reads date/cost/gallons/odometer/pricePerGallon — never
+ * location. Accepting the location-stripped shape lets the public/demo surfaces
+ * (PRD §5.4.2) feed it the same way the dashboard does; a full GasPurchase[] is
+ * still assignable here.
+ */
+export type AggInput = Omit<GasPurchase, "lat" | "lng">;
+
 export interface MonthlyPoint {
   date: string; // "YYYY-MM-01"
   cost: number | null;
@@ -22,7 +30,7 @@ export interface DateRange {
   to?: Date;
 }
 
-export function monthlyAvg(purchases: GasPurchase[], range?: DateRange): MonthlyPoint[] {
+export function monthlyAvg(purchases: AggInput[], range?: DateRange): MonthlyPoint[] {
   const filtered = range
     ? purchases.filter((p) => {
         const d = new Date(`${p.date}T00:00:00Z`);
@@ -34,7 +42,7 @@ export function monthlyAvg(purchases: GasPurchase[], range?: DateRange): Monthly
   const sorted = [...filtered].sort((a, b) => a.date.localeCompare(b.date));
 
   // Group by "YYYY-MM"
-  const groups = new Map<string, GasPurchase[]>();
+  const groups = new Map<string, AggInput[]>();
   for (const p of sorted) {
     const key = p.date.slice(0, 7);
     if (!groups.has(key)) groups.set(key, []);
@@ -73,7 +81,7 @@ export function monthlyAvg(purchases: GasPurchase[], range?: DateRange): Monthly
   const result: MonthlyPoint[] = [];
 
   for (const [month, rows] of Array.from(groups.entries()).sort()) {
-    const avg = <T extends keyof GasPurchase>(col: T) => {
+    const avg = <T extends keyof AggInput>(col: T) => {
       const vals = rows
         .map((r) => (r[col] != null ? Number(r[col]) : null))
         .filter((v): v is number => v !== null);

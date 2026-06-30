@@ -22,10 +22,17 @@ Phase 0: SETUP (sequential, blocks everything)
           ├── Stream C — Mobile form + PWA shell
           │     └── Stream D — Offline draft sync (needs C)
           ├── Stream E — Date-range filters (visualizations)
-          └── Stream F — Events edit/delete + owner events UI
+          ├── Stream F — Events edit/delete + owner events UI
+          └── Stream G — Recruiter showcase + read-only demo  ◄ TOP PRIORITY
+                (needs E for live filtered charts, A for lat/lng strip)
 ```
 
 Streams A, B, C, E, F can run in parallel after Phase 1. Stream D waits for C.
+
+**Stream G is the current top priority** (PRD §5.4) — it builds on the now-complete
+tool. It depends on Stream E (reuses the filtered public charts) and Stream A
+(the lat/lng columns it must strip on public surfaces). Within G, the demo
+sub-tasks block on the storage decision **G-1**.
 
 ---
 
@@ -492,6 +499,145 @@ Independent of A, B, C, D, E. Touches `actions/events.ts`, `components/EventSear
 
 ---
 
+### Stream G — Recruiter showcase + read-only demo  ◄ TOP PRIORITY
+
+Implements PRD §5.4. Turns `/` into a product-first recruiter showcase and adds a
+read-only `/demo`. Builds on the completed tool; does not modify the owner's real
+logging flow or real data. **Privacy invariant (PRD §5.4.2): `lat`/`lng` must
+never be transmitted on `/` or `/demo` — the server omits the columns, not the UI.**
+
+**Identity content (resolved from `~/Documents/career/evan_appel_source.md` 2026-06-28):**
+- Name: **Evan Appel** · Email: `appelew@gmail.com`
+- GitHub repo: `https://github.com/EvanWAppel/guzzolene` · GitHub profile: `https://github.com/EvanWAppel`
+- LinkedIn: `https://www.linkedin.com/in/evan-appel-8885569b/`
+- Bio/tagline source material: "data & applied-AI professional — uses AI agents to make data reliably accessible." Final tagline copy is editorial (G-12).
+- **Still owner's call:** which resume to bundle. Candidates in `~/Documents/career/resumes/`: `resume_ai_engineer.pdf` (recommended — best fit for the modern-stack-fluency framing), `resume_analytics_engineer.pdf`, `resume_data_analyst.pdf`, `resume_solutions_engineer.pdf`. Bundling a resume publishes it publicly — confirm before copying into `web/public/resume.pdf`.
+
+#### G-1 — [x] Decision: demo sandbox storage + reset mechanism
+**Deps:** V-8
+**Done:** ADR at `web/docs/adr-demo-sandbox.md`. Decision: **client-side `sessionStorage` overlay** (base = server-stripped real data shipped to client; writes held in `sessionStorage`; merge client-side). Chosen over server-side Postgres/Redis because it makes "real data never mutated" *structural* and eliminates the entire anonymous-write abuse/TTL/cleanup workstream (resolves §8.6 + §8.7). Reset = per-tab sessionStorage + 24h soft TTL. See the ADR's "Impact on existing G tasks" — it adjusts G-13/14, G-17/18/19, G-20/21, and reduces G-24.
+
+**— Privacy invariant (foundational; both surfaces depend on it) —**
+
+#### G-2 — [x] Test: public/demo read helper omits `lat`/`lng`
+**Deps:** A-2, E-8
+**Done:** `web/__tests__/lib/public-data.test.ts` asserts `publicPurchaseColumns` excludes lat/lng (and keeps safe fields), and that `listPublicPurchases` issues an explicit projection (not bare select-all) filtered to owner rows.
+
+#### G-3 — [x] Implement location-stripped public read
+**Deps:** G-2
+**Done:** `web/lib/public-data.ts` — `publicPurchaseColumns` (no lat/lng) + `listPublicPurchases()`. Public home (`app/page.tsx`) now reads through it; `monthlyAvg` relaxed to `AggInput` (location-stripped shape); `listOwnerPurchases` annotated as authed-only. Full suite green (87), tsc + eslint clean.
+
+**— Showcase home (`/`) —**
+
+#### G-4 — [x] Component test: showcase hero
+**Deps:** E-8, G-3
+**Done:** `web/__tests__/components/ShowcaseHero.test.tsx` — asserts product name (h1 "Guzzolene"), product-first tagline, the real-data stat (count + start year), and graceful no-data render. (DateRangeFilter + charts already covered by E tests; full-page server-component render left to the G-27 manual E2E.)
+
+#### G-5 — [x] Implement showcase hero
+**Deps:** G-4
+**Done:** `web/components/ShowcaseHero.tsx` (presentational, product-first: badge + name + tagline + description + live fill-up/since stats). Wired into `web/app/page.tsx` above the reused `<DateRangeFilter />` and the §5.2 filtered charts; header brand unified to "⛽ Guzzolene". Existing searchParams-driven dynamic behavior preserved. Suite 91/91, tsc + eslint clean.
+
+#### G-6 — [x] Component test: "Built with" tech badges
+**Deps:** G-5
+**Done:** `web/__tests__/components/TechBadges.test.tsx` — asserts a "Built with" section listing Next.js, RSC, Clerk, Neon, Drizzle, PWA, Vercel.
+
+#### G-7 — [x] Implement tech-badge strip
+**Deps:** G-6
+**Done:** `web/components/TechBadges.tsx` (outline badges for the live stack incl. TypeScript, Recharts, Tailwind, PWA·offline sync). OCR/Anthropic/Blob excluded (removed in Stream B).
+
+#### G-8 — [x] Architecture diagram asset + embed
+**Deps:** G-5
+**Done:** `web/components/ArchitectureDiagram.tsx` — resolved PRD §8.9 as **accessible HTML/CSS** (themeable, real-text labels, no asset drift) rather than an exported image: a `<figure>` with explicit accessible name + decorative arrows + figcaption. Test asserts the figure role + key node labels (Clerk, Neon, PWA, Vercel).
+
+#### G-9 — [x] Case-study narrative section
+**Deps:** G-5
+**Done:** `web/components/CaseStudy.tsx` — labeled `region` ("How it's built") with four decision cards: notebook→product (RSC+Drizzle), PWA-not-native + offline outbox, cutting the AI OCR, privacy-by-construction (location stripped at query). Understated, product-first.
+
+#### G-10 — [x] Source-link callout
+**Deps:** G-9
+**Done:** Prominent "View the source on GitHub" button in CaseStudy → `https://github.com/EvanWAppel/guzzolene`. Test asserts the link + href. (Confirm repo public before launch.)
+
+#### G-11 — [x] Component test: identity footer
+**Deps:** G-5
+**Done:** `web/__tests__/components/SiteFooter.test.tsx` — asserts name, GitHub repo, GitHub profile, LinkedIn, resume (`/resume.pdf`), `mailto:`, and the "Try the live demo" CTA → `/demo`.
+
+#### G-12 — [x] Implement identity footer + resume
+**Deps:** G-11
+**Done:** `web/components/SiteFooter.tsx` — Evan Appel + bio, all links, demo CTA. Resume in place (`web/public/resume.pdf`, AI-engineer). No contact form (PRD §7). All four case-study/footer components wired into `app/page.tsx` below the charts. Suite 101/101, tsc + eslint clean.
+**Note:** the footer's "Try the live demo" → `/demo` is a dead link until G-13+ build that route; safe because nothing ships until W-5 (deps G-27), by which point the demo exists.
+
+**— Read-only demo (`/demo`) —**
+
+#### G-13 — [x] Test: demo overlay module init (sessionStorage)
+**Deps:** G-1, G-3
+**Done:** `web/__tests__/lib/demo-overlay.test.ts` (12 cases) — empty when absent, round-trip, 24h TTL discard, corrupt-JSON tolerance.
+
+#### G-14 — [x] Implement demo overlay module + merge
+**Deps:** G-13
+**Done:** `web/lib/demo-overlay.ts` — `loadOverlay`/`saveOverlay`/`resetOverlay`, `mergeOverlay` (tombstones + edit overrides + added rows, sorted), `addToOverlay`/`editInOverlay`/`deleteFromOverlay`. Saves let storage errors throw (surfaced, not swallowed).
+
+#### G-15 — [x] Test: demo reads real data with location stripped
+**Deps:** G-14
+**Done:** `web/__tests__/components/DemoDashboard.test.tsx` renders base rows via the same `PublicPurchase` (location-stripped) shape `listPublicPurchases` returns; `/demo` page sources reads from `listPublicPurchases` (G-3), never `listOwnerPurchases`. (Full no-lat/lng-on-the-wire acceptance is G-25.)
+
+#### G-16 — [x] Implement demo read overlay
+**Deps:** G-15
+**Done:** `web/components/DemoDashboard.tsx` (client) renders the real dashboard shell (summary cards, RecentFills, OverviewGrid) from `mergeOverlay(base, overlay)`; `web/app/demo/page.tsx` is the public, no-auth route supplying the stripped base + events.
+
+#### G-17 — [x] Test: demo write lands in sandbox, not `gas_purchases`
+**Deps:** G-16
+**Done:** DemoDashboard test mocks the real server actions and asserts `createPurchase` is never called on add; the row appears via the overlay only. Real data is structurally untouchable (no server write path).
+
+#### G-18 — [x] Implement sandboxed add in demo
+**Deps:** G-17
+**Done:** `AddFillUpForm` gained an optional `onDemoSubmit` that routes submits to the overlay (`addToOverlay`) instead of the server/offline path.
+
+#### G-19 — [x] Test + implement: demo edit/delete scoped to sandbox
+**Deps:** G-18
+**Done:** `RecentFills` gained optional `onEditRow`/`onDeleteRow` overrides → `editInOverlay`/`deleteFromOverlay`. Base-row edits record an override; deletes tombstone; demo-added rows mutate in place. Test asserts delete tombstones in the overlay and never calls `deletePurchase`.
+
+#### G-20 — [x] Test: fresh session shows none of prior session's writes
+**Deps:** G-18
+**Done:** Covered by `demo-overlay.test.ts` (resetOverlay → fresh load empty) + sessionStorage's per-tab lifetime; module reads are session-scoped.
+
+#### G-21 — [x] Implement sandbox reset / TTL
+**Deps:** G-20
+**Done:** `resetOverlay()` + the 24h soft TTL in `loadOverlay`; "Reset demo" button in the DemoDashboard banner.
+
+#### G-22 — [x] Test + implement: persistent "read-only demo" banner
+**Deps:** G-16
+**Done:** Persistent `role="status"` banner in DemoDashboard ("Read-only demo — your changes aren't saved…"); test asserts it renders.
+
+#### G-23 — [x] Test + implement: geolocation discarded in demo
+**Deps:** G-18
+**Done:** `onDemoSubmit` deliberately omits coords; test grants geolocation, adds a row, and asserts the persisted overlay row has no `lat`/`lng`.
+
+#### G-24 — [x] Test + implement: demo overlay size cap
+**Deps:** G-18
+**Done:** `MAX_ADDED` (25) cap in `addToOverlay` throws a surfaced message; DemoDashboard catches and shows it in a `role="alert"`. Test asserts the throw past the cap. (No server surface to rate-limit — §8.7 resolved structurally.)
+
+**— Cross-cutting verification —**
+
+#### G-25 — [~] Acceptance: no `lat`/`lng` in any `/` or `/demo` network response
+**Deps:** G-12, G-21
+**Done (automated portion):** `web/__tests__/privacy-no-location.test.ts` — regression net asserting both surfaces' data sources are location-free: the public read projection excludes lat/lng, and merged demo data (base + added + edited), including its serialized form, contains no lat/lng keys.
+**Remaining (manual):** literal network-tab inspection of the live `/` and `/demo` responses — folded into the G-27 manual E2E (needs the running app).
+
+#### G-26 — [ ] Showcase a11y + perf + 390px audit
+**Deps:** G-12
+**TDD:**
+- Manual: `/` and `/demo` keyboard/screen-reader sane, sufficient contrast, no horizontal scroll at 390px iPhone Safari, and the §5.2 caching budget holds (default `/` still fast). Run Lighthouse; document scores in PR.
+- No automated test (visual/perf).
+
+#### G-27 — [ ] Manual E2E: recruiter flow
+**Deps:** G-25, G-26
+**TDD:**
+- Land on `/` signed out → see real charts, reach repo/LinkedIn/resume/mailto from the footer, read the case study.
+- "Try the live demo" → `/demo` shows real data with no location; add a row → it appears; confirm real `gas_purchases` is unchanged; open a fresh session → previous writes gone.
+- Document in PR.
+
+---
+
 ## Phase 3 — Wrap-up
 
 #### W-1 — [x] Update `web/README.md` to reflect new state
@@ -519,3 +665,10 @@ Independent of A, B, C, D, E. Touches `actions/events.ts`, `components/EventSear
 - Push to Vercel production.
 - Re-run smoke against the prod URL.
 - Confirm public home renders, owner login works, dashboard works.
+
+#### W-5 — [ ] Showcase + demo: docs + production deploy
+**Deps:** G-27
+**TDD:**
+- Update `web/README.md` and root `readme.md`: describe the showcase home, `/demo`, the privacy invariant, and the demo sandbox.
+- Confirm owner-supplied identity content is in place (name, bio, links, real `resume.pdf`) — not placeholders.
+- Deploy to Vercel production; smoke `/` and `/demo` on the prod URL (real data, no location, fresh-session reset).

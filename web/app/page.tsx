@@ -1,4 +1,4 @@
-import { listOwnerPurchases } from "@/actions/purchases";
+import { listPublicPurchases } from "@/lib/public-data";
 import { listOwnerEvents } from "@/actions/events";
 import { monthlyAvg } from "@/lib/aggregations";
 import { getMonthlyOilPrices } from "@/lib/oil-prices";
@@ -10,6 +10,11 @@ import MpgChart from "@/components/charts/MpgChart";
 import GpmChart from "@/components/charts/GpmChart";
 import HomeNav from "@/components/HomeNav";
 import DateRangeFilter from "@/components/DateRangeFilter";
+import ShowcaseHero from "@/components/ShowcaseHero";
+import TechBadges from "@/components/TechBadges";
+import ArchitectureDiagram from "@/components/ArchitectureDiagram";
+import CaseStudy from "@/components/CaseStudy";
+import SiteFooter from "@/components/SiteFooter";
 
 export default async function HomePage({
   searchParams,
@@ -20,7 +25,7 @@ export default async function HomePage({
   const range = parseDateRange(params);
 
   const [purchases, events] = await Promise.all([
-    listOwnerPurchases(),
+    listPublicPurchases(),
     listOwnerEvents(),
   ]);
 
@@ -37,18 +42,15 @@ export default async function HomePage({
     <div className="min-h-screen">
       {/* Nav */}
       <header className="border-b px-6 py-3 flex items-center justify-between">
-        <h1 className="font-bold text-lg">⛽ Gas Economics</h1>
+        <span className="font-bold text-lg">⛽ Guzzolene</span>
         <HomeNav />
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-10">
-        <div>
-          <h2 className="text-2xl font-semibold mb-1">Owner&apos;s Gas History</h2>
-          <p className="text-muted-foreground text-sm">
-            {purchases.length} fill-ups tracked since{" "}
-            {purchases[0]?.date ?? "N/A"}. Monthly averages shown.
-          </p>
-        </div>
+        <ShowcaseHero
+          totalFills={purchases.length}
+          since={purchases[0]?.date ?? null}
+        />
 
         <DateRangeFilter />
 
@@ -62,7 +64,16 @@ export default async function HomePage({
           <MpgChart data={monthly} events={filteredEvents} />
           <GpmChart data={monthly} events={filteredEvents} />
         </div>
+
+        {/* Case study (below the fold) — PRD §5.4.1 */}
+        <CaseStudy />
+        <div className="grid gap-10 sm:grid-cols-2 border-t pt-10">
+          <TechBadges />
+          <ArchitectureDiagram />
+        </div>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

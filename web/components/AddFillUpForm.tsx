@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPurchase } from "@/actions/purchases";
 import { saveDraft } from "@/lib/offline-outbox";
+import type { DemoDraft } from "@/lib/demo-overlay";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,16 @@ async function registerBackgroundSync() {
   }
 }
 
-export default function AddFillUpForm() {
+/**
+ * `onDemoSubmit`, when provided, switches the form into demo mode (PRD §5.4.3):
+ * submits go to the caller's sandbox handler instead of the server/offline path,
+ * and captured geolocation is deliberately discarded (never passed on) — G-23.
+ */
+export default function AddFillUpForm({
+  onDemoSubmit,
+}: {
+  onDemoSubmit?: (draft: DemoDraft) => void | Promise<void>;
+} = {}) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [queued, setQueued] = useState(false);
@@ -45,6 +55,20 @@ export default function AddFillUpForm() {
     e.preventDefault();
     setSaving(true);
     try {
+      if (onDemoSubmit) {
+        // Demo mode: write to the sandbox, never the server. Location is
+        // discarded here (G-23) — coords are intentionally not forwarded.
+        await onDemoSubmit({
+          date,
+          cost: cost || null,
+          gallons: gallons || null,
+          pricePerGallon: pricePerGallon || null,
+          odometer: odometer ? parseInt(odometer) : null,
+          fuelGrade,
+        });
+        setSaved(true);
+        return;
+      }
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         await saveDraft({
           date,

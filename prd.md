@@ -12,13 +12,18 @@ A practical app for one driver to record gasoline purchases and visualize the re
 
 Origin: the owner has logged every fill-up for a 2018 Mazda 3 Sport since December 2018. The original tool was a Python notebook that produced static Matplotlib charts. The web app is the active product; the notebook is preserved but frozen.
 
+**Dual purpose.** The product serves two audiences at once, and the design must honor both without compromise:
+1. **A real personal utility** — the owner logs fill-ups from a phone, including at the pump and offline. This is the reason the data exists and must never be degraded for the sake of presentation.
+2. **A portfolio showcase** — the public surface is also a recruiter-facing demonstration of the owner's engineering. The target impression is **modern-stack fluency**, framed product-first (it reads as a genuine shipped product, not a "Hi recruiters" landing page). See §5.4 for the showcase workstream.
+
 ---
 
 ## 2. Users and access model
 
 - **Owner** — one person (the developer). Sole admin. Owner data is shown on the public home page with `user_id = null` rows.
 - **Invited friends** — sign up via Clerk, land on `/pending`, gain a dashboard only after the owner approves them from `/admin`. Approval is recorded in Clerk `publicMetadata.approved`.
-- **Public visitors** — read-only view of the owner's charts at `/`. No sign-in required.
+- **Public visitors** — read-only view of the owner's charts at the showcase home `/`. No sign-in required.
+- **Demo visitors** — anonymous. Via `/demo` they get a sandboxed, read-only-overlay view of the owner's real data (with location stripped) inside the authenticated dashboard UI; any writes they make stay in a client-side per-session overlay (browser `sessionStorage`) and never touch real records — there is no server write path from the demo. Not a real account, no Clerk sign-in. See §5.4.3.
 
 This model is intentional and stays small. See non-goals (§7) for what is excluded.
 
@@ -34,6 +39,8 @@ Two surfaces, treated as one product:
 | Python notebook + CLI | `main.py`, `utils.py`, `scratch.ipynb` | **Frozen.** Documented for historical context; no roadmap items. |
 
 The Python surface reads from `gas_purchases.csv` and writes PNGs to `images/`. Its analyses (monthly aggregation, WTI overlay, event lines) were the original spec the web app reimplements.
+
+The public web surface comprises three routes serving the dual purpose (§1): the **showcase home** (`/`, recruiter-facing, unauthenticated), the **read-only demo** (`/demo`, unauthenticated sandbox), and the **authenticated tool** (`/dashboard/*`, owner/approved-user logging). The showcase and demo are specified in §5.4.
 
 ---
 
@@ -186,6 +193,56 @@ Three workstreams, each a hardening pass on one of the three core feature areas.
 
 **Schema changes:** none.
 
+### 5.4 Recruiter-facing showcase + read-only demo
+
+**Goal:** Turn the public surface into a portfolio-grade showcase that signals **modern-stack fluency** to a skimming technical recruiter, while preserving the app's real purpose as the owner's personal fill-up logger. The two purposes coexist on one product (§1); neither is allowed to degrade the other.
+
+**Priority & sequencing:** Top-priority workstream — it jumps ahead of §5.1–§5.3. It wraps the tool **as currently built** and does not block on the other workstreams. If the §5.1 mobile form has shipped, the demo uses it; otherwise it wraps the current form. No part of the showcase or demo writes to the owner's real data.
+
+**Framing/tone:** Product-first. The page must read as a genuine, shipped product — *not* a "Hi recruiters" landing page. Portfolio/case-study material lives below the fold and in the footer; polish carries the signal.
+
+**Requirements:**
+
+#### 5.4.1 Showcase home (`/`)
+Replaces the current charts-only home (§4.1). Top to bottom:
+
+1. **Hero** — the product name/tagline, with the **live real-data charts as the centerpiece**. Reuses the §5.2 filtered public charts (date-range filter strip present); the charts *are* the data-viz demonstration. Real data is the point (owner-approved for public display), subject to the location invariant in 5.4.2.
+2. **Case study (below the fold, understated but clearly labeled):**
+   - **"Built with" strip/badges** — the live stack, skimmable in ~2s: Next.js 16 App Router, React Server Components, Clerk, Neon Postgres, Drizzle, PWA / Service Worker, Vercel hosting. (Keep it current as the stack evolves; e.g. OCR/Anthropic/Blob are being removed in §5.1.)
+   - **Architecture diagram** — a small diagram of how the pieces fit (auth → app/RSC → DB → PWA → hosting). Asset committed under `/public`; source format (Excalidraw / Mermaid / exported SVG) is an implementation choice (§8).
+   - **Written narrative** — short. The problem, and the key decisions and tradeoffs: why PWA over native, why drop OCR, why RSC + Drizzle, how offline sync works. Demonstrates judgment, not just tool usage.
+   - **Source link** — prominent link to the public repo; optionally call out one well-built file.
+3. **Identity footer:**
+   - Owner's **real name + one-line bio**. *(Content TODO — owner supplies exact name and copy; do not invent.)*
+   - **Links:** GitHub repo, GitHub profile, LinkedIn, downloadable resume served from `/public/resume.pdf`, and a `mailto:` contact. No contact form (§7).
+   - **"Try the live demo"** CTA → `/demo` (5.4.3).
+
+#### 5.4.2 Privacy invariant on public surfaces
+- `lat`/`lng` (added in §5.1.4) are **never rendered or transmitted** on any unauthenticated surface — neither the showcase nor the demo. The server must **omit those columns from the query** for public/demo reads; hiding them client-side is insufficient.
+- **Acceptance:** no `lat`/`lng` value appears in any network response on `/` or `/demo`.
+- All other fill-up fields (date, cost, gallons, odometer, price, fuel grade) are owner-approved for public display.
+
+#### 5.4.3 Read-only demo mode (`/demo`)
+Lets an unauthenticated recruiter feel the dashboard and add-fill-up flow without signing in.
+
+- **Anonymous, client-side per-session overlay.** No Clerk sign-in, no cookie. The sandbox lives in the browser's `sessionStorage`; there is no server write path from `/demo`. (Storage decision recorded in `web/docs/adr-demo-sandbox.md` — resolves the former §8.6/§8.7 open questions.)
+- **Reads:** the owner's real fill-up history with **location stripped** (per 5.4.2), fetched server-side and rendered in the real authenticated dashboard UI (summary card, charts, rows).
+- **Writes:** any add/edit/delete the recruiter performs lands **only in their client-side overlay** and is merged over the read-only base so the change appears immediately. Nothing touches the owner's real records — this is structural (no server write path), not merely guarded.
+- **Reset:** the overlay is ephemeral — `sessionStorage` clears when the tab/session closes, so a fresh session starts from the base only; a 24h soft TTL discards stale overlays on load, and an explicit "Reset demo" control clears it.
+- **Clarity:** a persistent, unmissable banner — "Read-only demo — your changes aren't saved." The recruiter must always know the state.
+- **Add form:** the real form (mobile-shaped per §5.1 if shipped, else current). A geolocation prompt may appear, but any captured location is **discarded** in demo (not stored, not displayed).
+- **Abuse:** because writes never reach the server, there is no anonymous write surface to rate-limit or clean up. Only a client-side cap on overlay size remains.
+
+**Acceptance for 5.4.3:**
+- `/demo` shows the dashboard populated with real data and **no location anywhere**.
+- Adding a row updates the demo view but never the owner's real data (verify the real `gas_purchases` rows are unchanged).
+- Opening a fresh session shows none of the previous session's writes.
+
+#### 5.4.4 What stays behind auth
+- The real logging tool (`/dashboard/*`) is unchanged and remains the owner's actual instrument for logging fill-ups on a phone. The showcase and demo are strictly additive and read-only with respect to real data.
+
+**Schema changes:** none. The demo sandbox is client-side `sessionStorage` (no table, no migration, no new env var) per `web/docs/adr-demo-sandbox.md`.
+
 ---
 
 ## 6. Cross-cutting requirements
@@ -194,6 +251,7 @@ Three workstreams, each a hardening pass on one of the three core feature areas.
 - **Type safety.** Drizzle schema is the source of truth; do not bypass with raw SQL where a query builder works.
 - **No new auth surfaces.** Approval flow stays exactly as documented in §4.6. Do not add password reset, email verification beyond Clerk's defaults, etc.
 - **Errors surface.** Per `claude.md`: do not hide or wrap errors. Failed offline-sync attempts must be visible to the user, not silently retried forever.
+- **Showcase craft is judged.** Because `/` and `/demo` are evaluated by recruiters (§5.4), they must meet a visibly high bar: accessible (keyboard + screen-reader sane, sufficient contrast), fast (the §5.2 caching budget applies to the showcase), and clean on iPhone Safari at 390px. Sloppiness here reads as the opposite of the intended signal.
 
 ---
 
@@ -209,6 +267,10 @@ Explicitly out of scope for this PRD and the next iteration:
 - **Receipt/expense export.** Not a tax tool.
 - **Roadmap work on the Python surface.** Frozen.
 - **Reverse-geocoding stations** to human names. Deferred (see §8).
+- **Contact form / message storage.** The showcase uses `mailto:` + social links only. No server-side form, no spam handling, no inbox storage.
+- **Persistent demo accounts or demo sign-in.** The demo (§5.4.3) is anonymous and ephemeral; it never creates a real account or persists across sessions.
+- **Recruiter/visitor analytics or tracking.** Not added in this iteration.
+- **Interactive offline demonstration.** The demo cannot airplane-mode the recruiter's device; true offline/service-worker behavior is conveyed in the case-study narrative (§5.4.1), not exercised live in `/demo`.
 
 ---
 
@@ -221,6 +283,11 @@ These do not block the next iteration but must be answered before the relevant f
 3. **Removing OCR — what becomes of old `photo_url` values?** Migration drops the column. Existing pump-photo blobs in Vercel Blob are orphaned. Acceptable to leave them; a separate cleanup script can purge later.
 4. **Hardcoded-event migration idempotency.** Need a stable key (e.g. `(date, title)` unique constraint or upsert on a synthetic slug) to make `db:seed` safe to re-run after the migration.
 5. **Filter UI shape on public home vs dashboard.** Same component, but the public page has no "save as default" need. Default to identical UI; revisit if user feedback diverges.
+6. **Demo sandbox storage + reset cadence (§5.4.3).** ✅ RESOLVED — `web/docs/adr-demo-sandbox.md`: client-side `sessionStorage` overlay; reset on tab close + 24h soft TTL.
+7. **Demo abuse controls (§5.4.3).** ✅ RESOLVED by the same ADR: no server write surface exists, so no rate limiting/cleanup is needed — only a client-side overlay-size cap.
+8. **Showcase identity content (§5.4.1).** Owner must supply: exact name, one-line bio, GitHub repo + profile URLs, LinkedIn URL, and `resume.pdf`. Left as content TODOs — not invented.
+9. **Architecture diagram tooling/format (§5.4.1).** Excalidraw vs Mermaid vs hand-authored SVG; pick one and commit the source alongside the exported asset.
+10. **Optional offline-flow GIF/video.** A short screen-recording of the at-the-pump offline capture could strengthen the case study even though the demo is read-only. Optional; decide if worth recording.
 
 ---
 
@@ -231,4 +298,7 @@ These do not block the next iteration but must be answered before the relevant f
 - **Pending user** — signed up but not yet approved. Stuck on `/pending`.
 - **Fill-up** — one row in `gas_purchases`. One refueling event.
 - **Event** — one row in `world_events`. Renders as a dashed reference line on charts.
-- **Public surface** — `/`, viewable without sign-in. Shows only owner data.
+- **Public surface** — the unauthenticated routes: the showcase home `/` and the demo `/demo`. Shows only owner data, with location stripped.
+- **Showcase** — the recruiter-facing `/` (§5.4.1): hero + live charts, case study, identity footer. Product-first framing.
+- **Demo / demo visitor** — an anonymous, ephemeral `/demo` session (§5.4.3) that overlays the owner's real (location-stripped) data with the visitor's own sandboxed writes. Not a real account.
+- **Sandbox** — the per-session, ephemeral, write-scoped store backing the demo. Resets per session; never touches `gas_purchases`.

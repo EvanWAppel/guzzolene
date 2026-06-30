@@ -2,13 +2,30 @@
 
 import { useState, useTransition } from "react";
 import type { GasPurchase } from "@/lib/db/schema";
-import { deletePurchase, updatePurchase } from "@/actions/purchases";
+import { deletePurchase, updatePurchase, type PurchasePatch } from "@/actions/purchases";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function RecentFills({ purchases }: { purchases: GasPurchase[] }) {
+/** A row only needs these fields to render/edit — lets the demo pass
+ * location-stripped rows (PublicPurchase) without casting. */
+type FillRow = Omit<GasPurchase, "lat" | "lng">;
+
+/**
+ * `onEditRow`/`onDeleteRow`, when provided, override the real server actions —
+ * used by the demo to route mutations into the sandbox overlay (PRD §5.4.3).
+ * Default behavior (no overrides) calls the real `updatePurchase`/`deletePurchase`.
+ */
+export default function RecentFills({
+  purchases,
+  onEditRow,
+  onDeleteRow,
+}: {
+  purchases: FillRow[];
+  onEditRow?: (id: string, patch: PurchasePatch) => void | Promise<void>;
+  onDeleteRow?: (id: string) => void | Promise<void>;
+}) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (purchases.length === 0) return null;
@@ -28,9 +45,19 @@ export default function RecentFills({ purchases }: { purchases: GasPurchase[] })
         <ul className="divide-y">
           {recent.map((p) =>
             editingId === p.id ? (
-              <EditRow key={p.id} purchase={p} onDone={() => setEditingId(null)} />
+              <EditRow
+                key={p.id}
+                purchase={p}
+                onDone={() => setEditingId(null)}
+                onEditRow={onEditRow}
+              />
             ) : (
-              <Row key={p.id} purchase={p} onEdit={() => setEditingId(p.id)} />
+              <Row
+                key={p.id}
+                purchase={p}
+                onEdit={() => setEditingId(p.id)}
+                onDeleteRow={onDeleteRow}
+              />
             ),
           )}
         </ul>
@@ -39,12 +66,20 @@ export default function RecentFills({ purchases }: { purchases: GasPurchase[] })
   );
 }
 
-function Row({ purchase, onEdit }: { purchase: GasPurchase; onEdit: () => void }) {
+function Row({
+  purchase,
+  onEdit,
+  onDeleteRow,
+}: {
+  purchase: FillRow;
+  onEdit: () => void;
+  onDeleteRow?: (id: string) => void | Promise<void>;
+}) {
   const [pending, start] = useTransition();
   function handleDelete() {
     if (!window.confirm(`Delete fill-up from ${purchase.date}?`)) return;
     start(async () => {
-      await deletePurchase(purchase.id);
+      await (onDeleteRow ?? deletePurchase)(purchase.id);
     });
   }
   return (
@@ -66,7 +101,15 @@ function Row({ purchase, onEdit }: { purchase: GasPurchase; onEdit: () => void }
   );
 }
 
-function EditRow({ purchase, onDone }: { purchase: GasPurchase; onDone: () => void }) {
+function EditRow({
+  purchase,
+  onDone,
+  onEditRow,
+}: {
+  purchase: FillRow;
+  onDone: () => void;
+  onEditRow?: (id: string, patch: PurchasePatch) => void | Promise<void>;
+}) {
   const [date, setDate] = useState(purchase.date);
   const [cost, setCost] = useState(purchase.cost ?? "");
   const [gallons, setGallons] = useState(purchase.gallons ?? "");
@@ -79,7 +122,7 @@ function EditRow({ purchase, onDone }: { purchase: GasPurchase; onDone: () => vo
 
   function handleSave() {
     start(async () => {
-      await updatePurchase(purchase.id, {
+      await (onEditRow ?? updatePurchase)(purchase.id, {
         date,
         cost: cost || null,
         gallons: gallons || null,
