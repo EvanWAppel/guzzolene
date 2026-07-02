@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const REPO = "https://github.com/EvanWAppel/guzzolene";
@@ -67,9 +68,9 @@ export default function CaseStudy() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-2">
-        <Button render={<Link href={REPO} />} variant="outline">
+        <Link href={REPO} className={cn(buttonVariants({ variant: "outline" }))}>
           View the source on GitHub
-        </Button>
+        </Link>
         <span className="text-xs text-muted-foreground">
           Public repo · Next.js 16 · TypeScript
         </span>

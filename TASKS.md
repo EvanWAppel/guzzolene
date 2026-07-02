@@ -619,23 +619,20 @@ never be transmitted on `/` or `/demo` — the server omits the columns, not the
 
 **— Cross-cutting verification —**
 
-#### G-25 — [~] Acceptance: no `lat`/`lng` in any `/` or `/demo` network response
+#### G-25 — [x] Acceptance: no `lat`/`lng` in any `/` or `/demo` network response
 **Deps:** G-12, G-21
-**Done (automated portion):** `web/__tests__/privacy-no-location.test.ts` — regression net asserting both surfaces' data sources are location-free: the public read projection excludes lat/lng, and merged demo data (base + added + edited), including its serialized form, contains no lat/lng keys.
-**Remaining (manual):** literal network-tab inspection of the live `/` and `/demo` responses — folded into the G-27 manual E2E (needs the running app).
+**Done (automated):** `web/__tests__/privacy-no-location.test.ts` — regression net asserting both surfaces' data sources are location-free.
+**Done (live, 2026-07-01):** ran the dev server against the real Neon DB and fetched `/` and `/demo`. Zero `"lat"`/`"lng"` JSON keys in either response; zero `lng` tokens; the only raw "lat" substrings are `translate`/`template`. Confirmed on the wire, not just in tests.
 
 #### G-26 — [ ] Showcase a11y + perf + 390px audit
 **Deps:** G-12
-**TDD:**
-- Manual: `/` and `/demo` keyboard/screen-reader sane, sufficient contrast, no horizontal scroll at 390px iPhone Safari, and the §5.2 caching budget holds (default `/` still fast). Run Lighthouse; document scores in PR.
-- No automated test (visual/perf).
+**Status:** BLOCKED on a browser — the Claude-in-Chrome extension isn't connected, so Lighthouse + the 390px visual pass can't run headlessly. Partial signal from the live server log: `GET /` warm render ~280ms application-code, `/demo` ~380ms — comfortably within budget.
+**To do (owner, in a browser):** `cd web && npm run dev`, then Lighthouse on `/` and `/demo`, keyboard/SR pass, 390px iPhone Safari check.
 
-#### G-27 — [ ] Manual E2E: recruiter flow
+#### G-27 — [~] Manual E2E: recruiter flow
 **Deps:** G-25, G-26
-**TDD:**
-- Land on `/` signed out → see real charts, reach repo/LinkedIn/resume/mailto from the footer, read the case study.
-- "Try the live demo" → `/demo` shows real data with no location; add a row → it appears; confirm real `gas_purchases` is unchanged; open a fresh session → previous writes gone.
-- Document in PR.
+**Done (live headless, 2026-07-01):** dev server on real data. `/` and `/demo` both return 200 signed-out (proxy fix verified — no sign-in redirect). `/` renders hero, "Built with", case study, footer with repo/LinkedIn/`resume.pdf`/mailto/demo-CTA, and real stats (211 fill-ups). `/demo` renders the read-only banner, summary (211), reset control, and the add form. No location on the wire (see G-25). Server log clean (no errors).
+**Remaining (needs a real browser):** the *interactive* loop — add → edit → delete → Reset — and fresh-session isolation. That path is client-side (sessionStorage) so curl can't exercise it, but it's covered by `DemoDashboard.test.tsx` + `demo-overlay.test.ts`. Owner to click through once in a browser.
 
 ---
 
