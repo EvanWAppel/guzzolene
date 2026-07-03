@@ -2,7 +2,8 @@ import Link from "next/link";
 import { listPublicPurchases } from "@/lib/public-data";
 import { listOwnerEvents } from "@/actions/events";
 import DemoDashboard from "@/components/DemoDashboard";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Guzzolene — live demo",
@@ -27,9 +28,12 @@ export default async function DemoPage() {
         <Link href="/" className="font-bold text-lg">
           ⛽ Guzzolene
         </Link>
-        <Button render={<Link href="/" />} variant="outline" size="sm">
+        <Link
+          href="/"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
           ← Back to overview
-        </Button>
+        </Link>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">

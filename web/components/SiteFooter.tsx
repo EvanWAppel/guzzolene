@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 /**
@@ -30,7 +31,9 @@ export default function SiteFooter() {
         </div>
 
         <div className="space-y-4 sm:text-right">
-          <Button render={<Link href="/demo" />}>Try the live demo</Button>
+          <Link href="/demo" className={cn(buttonVariants())}>
+            Try the live demo
+          </Link>
           <nav className="flex flex-wrap gap-x-4 gap-y-2 sm:justify-end text-sm">
             {LINKS.map((l) => (
               <a
