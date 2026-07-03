@@ -23,12 +23,11 @@ const db = drizzle({ client: sql });
 async function main() {
   console.log("Seeding owner gas purchases...");
 
-  // Clear existing owner purchases (events are managed by db:seed-events)
-  await db.delete(gasPurchases).where(isNull(gasPurchases.userId));
-  console.log("Cleared existing owner gas purchases.");
-
-  // Parse CSV — path is relative to project root
-  const csvPath = resolve(__dirname, "../../gas_purchases.csv");
+  // Parse and validate the CSV BEFORE touching the DB. This ordering matters:
+  // the seed replaces all owner history, so a missing/empty/unparseable CSV must
+  // abort *before* the destructive delete — otherwise we'd wipe the owner's
+  // fill-ups and re-insert nothing, silently dropping the entire history.
+  const csvPath = resolve(__dirname, "../../gas_purchases.csv"); // relative to project root
   const csv = readFileSync(csvPath, "utf-8");
 
   const { data } = Papa.parse<{
@@ -49,6 +48,24 @@ async function main() {
       odometer: r.odometer ? parseInt(r.odometer) : null,
       pricePerGallon: r.price_per_gallon || null,
     }));
+
+  if (rows.length === 0) {
+    throw new Error(
+      `Refusing to backfill: parsed 0 fill-ups from ${csvPath}. ` +
+        `Check that the file exists and has a 'date' header column. ` +
+        `(Not deleting existing owner data.)`,
+    );
+  }
+
+  const dates = rows.map((r) => r.date).sort();
+  console.log(
+    `Parsed ${rows.length} fill-ups (${dates[0]} → ${dates[dates.length - 1]}).`,
+  );
+
+  // Now that we have a healthy dataset in hand, replace owner purchases.
+  // (Owner world events are managed separately by db:seed-events.)
+  await db.delete(gasPurchases).where(isNull(gasPurchases.userId));
+  console.log("Cleared existing owner gas purchases.");
 
   // Insert in batches of 50
   for (let i = 0; i < rows.length; i += 50) {
