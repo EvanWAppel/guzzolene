@@ -632,7 +632,18 @@ never be transmitted on `/` or `/demo` — the server omits the columns, not the
 - **a11y fixes applied (2026-08-16):** chart section titles promoted from plain text to headings; interactive tap targets (nav buttons, filter chips, footer links) raised toward the ≥44px guideline. See the follow-up commit.
 - **Known Recharts limitation:** each chart renders as `role="application"` with empty generic children — opaque to SR beyond its (now-heading) title; mitigated by the live region + description.
 **Remaining (owner, in a browser):** true 390px iPhone-Safari visual pass — Chrome clamps window width (~500px min) so the headless viewport can't shrink to 390 (tap-target sizes are viewport-independent and were checked; the visual reflow was not). Formal Lighthouse scores: see below.
-**Lighthouse (2026-08-16):** _pending — run captured this session, scores recorded here._
+**Lighthouse (2026-08-16, production build, `npx lighthouse`):**
+| Category | `/` | `/demo` |
+|---|---|---|
+| Accessibility | **100** | **100** |
+| Best Practices | 77 | 73 |
+| SEO | 91 | 91 |
+| Performance | _(61 / 55 — unreliable)_ | _(unreliable)_ |
+
+Accessibility hit 100 on both once the contrast fix landed (was 96 on `/`). **Performance is not a valid reading** — the machine was at load average ~200 (an unrelated VM + Playwright run saturating CPU); a real perf score needs a quiet machine. Residual non-performance findings:
+- `geolocation-on-start` (`/demo` only) — the demo add-form requests geolocation on mount even though coords are discarded (G-23). Should skip the geolocation request in demo mode; it also spares visitors a pointless permission prompt. **Not yet fixed.**
+- `robots-txt` (both) — no `robots.txt` served. Cheap SEO win. **Not yet fixed.**
+- `third-party-cookies` / `inspector-issues` (both) — Clerk auth cookies; expected for an authed app, no action.
 
 #### G-27 — [x] Manual E2E: recruiter flow
 **Deps:** G-25, G-26
