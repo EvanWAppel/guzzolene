@@ -293,12 +293,18 @@ Mobile layout polish and PWA install (no offline draft capture yet — that's St
 - Reference from manifest.
 - No test required.
 
-#### C-8 — [x] Add service worker for install
+#### C-8 — [x] Add service worker for install (app shell now cached)
 **Deps:** C-7
 **TDD:**
-- Register a minimal service worker in `web/public/sw.js` (cache app shell; no offline logic yet).
+- Register a service worker in `web/public/sw.js`.
 - Register from a client-side bootstrap in `layout.tsx` or a dedicated client component.
-- No test required (verify in Chrome devtools → Application → Service Workers shows "activated").
+- Verify in Chrome devtools → Application → Service Workers shows "activated".
+**Update (2026-08-15):** the deferred app-shell caching is now real. `public/sw.js`
+does runtime caching (network-first navigations → cached page → precached
+`public/offline.html`; cache-first for `/_next/static`, icons, manifest) with a
+versioned cache purged on `activate`. Covered by `web/__tests__/sw.test.ts`
+(loads the shipped `sw.js` into a simulated SW scope). `next.config.ts` sends
+`no-cache` for `/sw.js`. This closes the C-8/D-9 gap below.
 
 #### C-9 — [x] Lighthouse PWA audit ≥ 90
 **Deps:** C-8
@@ -354,20 +360,29 @@ Depends on Stream C being complete (needs the service worker).
 - Fallback to the online-event trigger from D-7.
 - No test required (browser-API behavior; verify manually with airplane-mode roundtrip).
 
-#### D-9 — [ ] E2E manual airplane-mode test
+#### D-9 — [~] E2E manual airplane-mode test
 **Deps:** D-8
 **TDD:**
 - Airplane-mode the device, fill the form, submit, re-enable network — row appears in DB without user intervention.
 - Document in PR.
 
-> **KNOWN GAP (deferred 2026-06-13):** the installed PWA cannot open offline.
-> `public/sw.js` has a no-op `fetch` handler — C-8 ("cache app shell") was
-> marked done but never actually caches the shell, so launching the app in
-> airplane mode shows iOS's "not connected to the Internet" error and the
-> outbox is unreachable. The IndexedDB outbox + sync code (D-1…D-8) is correct
-> and tested; it just can't be reached offline until the SW caches the app
-> shell (network-first navigation + `/_next/static` precache). Revisit C-8/D-9
-> together. User chose to defer rather than iterate on-device.
+**Code-complete (2026-08-15):** the C-8/D-9 gap below is closed — `public/sw.js`
+now caches the app shell (see C-8 update), so the installed PWA can open offline
+and reach the outbox. Automated coverage: `web/__tests__/sw.test.ts` +
+the existing D-1…D-8 outbox/sync tests.
+**Remaining (owner, on-device — can't run headlessly):** install the PWA, open it
+once online to warm the cache, then airplane-mode → relaunch → add → re-enable
+network → confirm the row lands in the DB. Watch that Clerk's client SDK renders
+the cached authed `/dashboard/add` page while offline.
+
+> ~~**KNOWN GAP (deferred 2026-06-13):** the installed PWA cannot open offline.~~
+> **RESOLVED 2026-08-15.** `public/sw.js` had a no-op `fetch` handler — C-8
+> ("cache app shell") was marked done but never actually cached the shell, so
+> launching the app in airplane mode showed iOS's "not connected to the Internet"
+> error and the outbox was unreachable. The SW now caches the shell (network-first
+> navigation + cache-first `/_next/static` + precached `/offline.html`), so the
+> outbox (D-1…D-8) is reachable offline. Only the on-device airplane-mode
+> roundtrip remains as a manual owner check.
 
 ---
 

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#E91E63" />
+    <title>Offline · Guzzolene</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background: #ffffff;
+        color: #111111;
+        padding: 1.5rem;
+        text-align: center;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0a0a0a;
+          color: #ededed;
+        }
+      }
+      main {
+        max-width: 22rem;
+      }
+      .mark {
+        font-size: 3rem;
+        line-height: 1;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 1rem 0 0.5rem;
+      }
+      p {
+        margin: 0.5rem 0;
+        color: #6b7280;
+        line-height: 1.5;
+      }
+      button {
+        margin-top: 1.25rem;
+        padding: 0.6rem 1.25rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: #e91e63;
+        color: #ffffff;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">⛽</div>
+      <h1>You're offline</h1>
+      <p>
+        Reconnect to load Guzzolene. Any fill-ups you queue while offline will
+        sync automatically once you're back online.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>
