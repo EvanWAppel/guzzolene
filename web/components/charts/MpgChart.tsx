@@ -33,7 +33,7 @@ export default function MpgChart({ data, events }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
+        <CardTitle role="heading" aria-level={2}>
           Miles per Gallon (MPG)
           {overallAvg && (
             <span className="ml-3 text-sm font-normal text-muted-foreground">

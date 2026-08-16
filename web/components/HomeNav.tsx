@@ -22,10 +22,10 @@ export default function HomeNav() {
   return (
     <div className="flex items-center gap-3">
       <SignInButton mode="modal">
-        <Button variant="outline" size="sm">Sign In</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4">Sign In</Button>
       </SignInButton>
       <SignUpButton mode="modal">
-        <Button size="sm">Get Access</Button>
+        <Button size="sm" className="min-h-11 px-4">Get Access</Button>
       </SignUpButton>
     </div>
   );

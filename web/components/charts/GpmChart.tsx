@@ -33,7 +33,7 @@ export default function GpmChart({ data, events }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
+        <CardTitle role="heading" aria-level={2}>
           Gallons per 100 Miles (GP100M)
           {overallAvg && (
             <span className="ml-3 text-sm font-normal text-muted-foreground">

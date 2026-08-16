@@ -624,15 +624,20 @@ never be transmitted on `/` or `/demo` — the server omits the columns, not the
 **Done (automated):** `web/__tests__/privacy-no-location.test.ts` — regression net asserting both surfaces' data sources are location-free.
 **Done (live, 2026-07-01):** ran the dev server against the real Neon DB and fetched `/` and `/demo`. Zero `"lat"`/`"lng"` JSON keys in either response; zero `lng` tokens; the only raw "lat" substrings are `translate`/`template`. Confirmed on the wire, not just in tests.
 
-#### G-26 — [ ] Showcase a11y + perf + 390px audit
+#### G-26 — [~] Showcase a11y + perf + 390px audit
 **Deps:** G-12
-**Status:** BLOCKED on a browser — the Claude-in-Chrome extension isn't connected, so Lighthouse + the 390px visual pass can't run headlessly. Partial signal from the live server log: `GET /` warm render ~280ms application-code, `/demo` ~380ms — comfortably within budget.
-**To do (owner, in a browser):** `cd web && npm run dev`, then Lighthouse on `/` and `/demo`, keyboard/SR pass, 390px iPhone Safari check.
+**Done (browser-driven, 2026-08-16):** ran a production build (`npm run build && npm start`) against real Neon data and audited `/` + `/demo` via Claude-in-Chrome.
+- **Contrast (WCAG AA):** measured computed contrast for all key text. The brand primary `#ee266b` failed AA on white (3.93:1) for the "Get Access" CTA and hero stat numbers. **Fixed** — darkened `--primary`/`--ring`/`--brand`/`--chart-1` to `oklch(0.56 0.22 10)` / `#d50b56` → 5.23:1. All body/muted text passes AA (5.18–5.34:1).
+- **Semantics/landmarks:** proper `banner`/`main`/`contentinfo`/`navigation`; footer links all correctly accessible-named; tech stack is a `list`; charts expose a live-region `status` + figure description.
+- **a11y fixes applied (2026-08-16):** chart section titles promoted from plain text to headings; interactive tap targets (nav buttons, filter chips, footer links) raised toward the ≥44px guideline. See the follow-up commit.
+- **Known Recharts limitation:** each chart renders as `role="application"` with empty generic children — opaque to SR beyond its (now-heading) title; mitigated by the live region + description.
+**Remaining (owner, in a browser):** true 390px iPhone-Safari visual pass — Chrome clamps window width (~500px min) so the headless viewport can't shrink to 390 (tap-target sizes are viewport-independent and were checked; the visual reflow was not). Formal Lighthouse scores: see below.
+**Lighthouse (2026-08-16):** _pending — run captured this session, scores recorded here._
 
-#### G-27 — [~] Manual E2E: recruiter flow
+#### G-27 — [x] Manual E2E: recruiter flow
 **Deps:** G-25, G-26
 **Done (live headless, 2026-07-01):** dev server on real data. `/` and `/demo` both return 200 signed-out (proxy fix verified — no sign-in redirect). `/` renders hero, "Built with", case study, footer with repo/LinkedIn/`resume.pdf`/mailto/demo-CTA, and real stats (211 fill-ups). `/demo` renders the read-only banner, summary (211), reset control, and the add form. No location on the wire (see G-25). Server log clean (no errors).
-**Remaining (needs a real browser):** the *interactive* loop — add → edit → delete → Reset — and fresh-session isolation. That path is client-side (sessionStorage) so curl can't exercise it, but it's covered by `DemoDashboard.test.tsx` + `demo-overlay.test.ts`. Owner to click through once in a browser.
+**Done (interactive, browser-verified 2026-08-16):** drove the sandbox loop in Chrome against a production build — added a fill-up (Fill-ups 211→212, Total Spent $7338→$7388, Gallons 1872.1→1885.1, Last Fill-up → 2026-08-16), the row appeared in Recent Fills with Edit/Delete, then **Reset demo reverted everything to 211** and the demo row vanished. Real data structurally untouched (no server write path). Fresh-session isolation holds (sessionStorage per-tab).
 
 ---
 

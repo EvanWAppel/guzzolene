@@ -38,10 +38,10 @@ export default function DateRangeFilter() {
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="flex gap-1">
-        <Button variant="outline" size="sm" onClick={() => clickPreset("30d")}>30d</Button>
-        <Button variant="outline" size="sm" onClick={() => clickPreset("90d")}>90d</Button>
-        <Button variant="outline" size="sm" onClick={() => clickPreset("1y")}>1y</Button>
-        <Button variant="outline" size="sm" onClick={() => clickPreset("all")}>All</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("30d")}>30d</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("90d")}>90d</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("1y")}>1y</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("all")}>All</Button>
       </div>
       <div className="flex items-end gap-2">
         <div className="space-y-1">

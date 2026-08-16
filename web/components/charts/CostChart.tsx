@@ -24,7 +24,7 @@ export default function CostChart({ data, events, compact }: Props) {
   return (
     <Card>
       <CardHeader className={compact ? "pb-2" : undefined}>
-        <CardTitle className={compact ? "text-sm" : undefined}>Total Cost ($)</CardTitle>
+        <CardTitle role="heading" aria-level={2} className={compact ? "text-sm" : undefined}>Total Cost ($)</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={compact ? 180 : 280}>

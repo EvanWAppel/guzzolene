@@ -35,7 +35,7 @@ export default function CostPerMileChart({ data, oilPrices, events }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cost per Mile vs. WTI Crude Oil</CardTitle>
+        <CardTitle role="heading" aria-level={2}>Cost per Mile vs. WTI Crude Oil</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={340}>
