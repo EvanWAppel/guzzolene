@@ -41,9 +41,14 @@ export default async function HomePage({
   return (
     <div className="min-h-screen">
       {/* Nav */}
-      <header className="border-b px-6 py-3 flex items-center justify-between">
-        <span className="font-bold text-lg">⛽ Guzzolene</span>
-        <HomeNav />
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+          <span className="flex items-center gap-2 font-bold text-lg tracking-tight">
+            <span aria-hidden className="text-xl">⛽</span>
+            <span className="text-gradient-brand">Guzzolene</span>
+          </span>
+          <HomeNav />
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-10">
