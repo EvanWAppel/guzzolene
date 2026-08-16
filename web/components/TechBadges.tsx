@@ -26,7 +26,10 @@ export default function TechBadges() {
       <ul className="flex flex-wrap gap-2">
         {STACK.map((tech) => (
           <li key={tech}>
-            <Badge variant="outline" className="font-normal">
+            <Badge
+              variant="outline"
+              className="font-normal transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+            >
               {tech}
             </Badge>
           </li>

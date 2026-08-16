@@ -39,7 +39,7 @@ export default function SiteFooter() {
               <a
                 key={l.label}
                 href={l.href}
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                className="inline-flex items-center min-h-11 text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
               >
                 {l.label}
               </a>

@@ -23,7 +23,7 @@ export default function PricePerGallonChart({ data, events }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Price per Gallon (Monthly Avg)</CardTitle>
+        <CardTitle role="heading" aria-level={2}>Price per Gallon (Monthly Avg)</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
