@@ -18,12 +18,16 @@ export default function DateRangeFilter() {
   const from = params.get("from") ?? "";
   const to = params.get("to") ?? "";
 
+  const rangeDays = from && to
+    ? Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000)
+    : null;
+
   function pushParams(next: { from?: string; to?: string }) {
     const sp = new URLSearchParams();
     if (next.from) sp.set("from", next.from);
     if (next.to) sp.set("to", next.to);
     const qs = sp.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   function clickPreset(p: RangePreset) {
@@ -36,12 +40,13 @@ export default function DateRangeFilter() {
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <div className="flex gap-1">
-        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("30d")}>30d</Button>
-        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("90d")}>90d</Button>
-        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("1y")}>1y</Button>
-        <Button variant="outline" size="sm" className="min-h-11 px-4" onClick={() => clickPreset("all")}>All</Button>
+    <div className="date-range-filter flex flex-wrap items-end gap-3">
+      <span className="eyebrow filter-caption">VIEW THE JOURNAL</span>
+      <div className="range-presets flex gap-1" aria-label="Date range presets">
+        <Button variant="outline" size="sm" className="min-h-11 px-4" aria-pressed={rangeDays === 30} onClick={() => clickPreset("30d")}>30d</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" aria-pressed={rangeDays === 90} onClick={() => clickPreset("90d")}>90d</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" aria-pressed={rangeDays === 365} onClick={() => clickPreset("1y")}>1y</Button>
+        <Button variant="outline" size="sm" className="min-h-11 px-4" aria-pressed={!from && !to} onClick={() => clickPreset("all")}>All</Button>
       </div>
       <div className="flex items-end gap-2">
         <div className="space-y-1">

@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gas Economics",
-  description: "Personal gas purchase tracker and analytics",
+  title: "Guzzolene — A Personal Fuel Journal",
+  description: "One car. A world of moving parts. Explore real fuel economy and price trends with the world events behind them.",
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#E91E63",
+  themeColor: "#e3422b",
 };
 
 export default function RootLayout({

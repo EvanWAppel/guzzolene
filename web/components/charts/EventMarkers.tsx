@@ -3,31 +3,43 @@ import type { WorldEvent } from "@/lib/db/schema";
 
 interface EventMarkersProps {
   events: WorldEvent[];
+  yAxisId?: string;
 }
 
-// 4 staggered y-positions for labels to avoid overlap, matching Python's _LABEL_Y_POSITIONS
-const Y_POSITIONS = ["95%", "75%", "55%", "35%"];
-
-export default function EventMarkers({ events }: EventMarkersProps) {
+export default function EventMarkers({ events, yAxisId }: EventMarkersProps) {
   return (
     <>
       {events.map((evt, i) => (
         <ReferenceLine
           key={evt.id}
-          x={evt.date.slice(0, 7) + "-01"} // normalize to month start
-          stroke="#9CA3AF"
-          strokeDasharray="4 3"
+          x={evt.date.slice(0, 7) + "-01"}
+          {...(yAxisId ? { yAxisId } : {})}
+          stroke="#aaa99d"
+          strokeDasharray="3 5"
           strokeWidth={1}
           label={{
-            value: evt.name,
+            value: String(i + 1).padStart(2, "0"),
             position: "insideTopLeft",
-            angle: -90,
-            fontSize: 10,
-            fill: "#6B7280",
-            offset: parseInt(Y_POSITIONS[i % Y_POSITIONS.length]),
+            fontSize: 9,
+            fill: "#6b6c62",
+            offset: 8 + (i % 3) * 16,
           }}
         />
       ))}
     </>
+  );
+}
+
+export function EventKey({ events }: { events: WorldEvent[] }) {
+  if (!events.length) return null;
+  return (
+    <details className="event-key">
+      <summary>{events.length} world events · view context</summary>
+      <ol>
+        {events.map((event, i) => (
+          <li key={event.id}><span>{String(i + 1).padStart(2, "0")}</span><time dateTime={event.date}>{event.date}</time><span>{event.name}</span></li>
+        ))}
+      </ol>
+    </details>
   );
 }

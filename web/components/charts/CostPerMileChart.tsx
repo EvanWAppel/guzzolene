@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MonthlyPoint } from "@/lib/aggregations";
 import type { WorldEvent } from "@/lib/db/schema";
 import type { OilPricePoint } from "@/lib/oil-prices";
-import EventMarkers from "./EventMarkers";
+import EventMarkers, { EventKey } from "./EventMarkers";
 
 interface Props {
   data: MonthlyPoint[];
@@ -40,32 +40,40 @@ export default function CostPerMileChart({ data, oilPrices, events }: Props) {
       <CardContent>
         <ResponsiveContainer width="100%" height={340}>
           <ComposedChart data={merged} margin={{ top: 5, right: 40, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="var(--border)" />
             <XAxis
               dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              minTickGap={36}
+              tickMargin={10}
               tickFormatter={(d) => d.slice(0, 7)}
               tick={{ fontSize: 11 }}
             />
             {/* Left axis — cost/mile */}
             <YAxis
+              axisLine={false}
+              tickLine={false}
               yAxisId="left"
               tickFormatter={(v) => `$${v.toFixed(2)}`}
-              tick={{ fontSize: 11, fill: "#9C27B0" }}
+              tick={{ fontSize: 11, fill: "#d94730" }}
               domain={["auto", "auto"]}
             />
             {/* Right axis — WTI crude */}
             <YAxis
+              axisLine={false}
+              tickLine={false}
               yAxisId="right"
               orientation="right"
               tickFormatter={(v) => `$${v.toFixed(0)}`}
-              tick={{ fontSize: 11, fill: "#E65100" }}
+              tick={{ fontSize: 11, fill: "#3e646b" }}
               domain={["auto", "auto"]}
             />
             <Tooltip
               labelFormatter={(l) => l.slice(0, 7)}
               formatter={(v, name) => {
                 const n = Number(v ?? 0);
-                return name === "oilPrice"
+                return name === "WTI Crude"
                   ? [`$${n.toFixed(2)}/bbl`, "WTI Crude"]
                   : [`$${n.toFixed(3)}/mi`, "Cost/mile"];
               }}
@@ -75,7 +83,7 @@ export default function CostPerMileChart({ data, oilPrices, events }: Props) {
               yAxisId="left"
               type="monotone"
               dataKey="costPerMile"
-              stroke="#9C27B0"
+              stroke="#d94730"
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -85,16 +93,17 @@ export default function CostPerMileChart({ data, oilPrices, events }: Props) {
               yAxisId="right"
               type="monotone"
               dataKey="oilPrice"
-              stroke="#E65100"
+              stroke="#3e646b"
               strokeWidth={1.5}
               dot={false}
               opacity={0.75}
               connectNulls
               name="WTI Crude"
             />
-            <EventMarkers events={events} />
+            <EventMarkers events={events} yAxisId="left" />
           </ComposedChart>
         </ResponsiveContainer>
+        <EventKey events={events} />
       </CardContent>
     </Card>
   );
