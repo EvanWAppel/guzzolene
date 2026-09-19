@@ -3,6 +3,8 @@ import { listOwnerEvents } from "@/actions/events";
 import { monthlyAvg } from "@/lib/aggregations";
 import { getMonthlyOilPrices } from "@/lib/oil-prices";
 import { parseDateRange, filterByRange, type SearchParams } from "@/lib/filters";
+import Link from "next/link";
+import { ArrowUpRight, Fuel } from "lucide-react";
 import OverviewGrid from "@/components/charts/OverviewGrid";
 import PricePerGallonChart from "@/components/charts/PricePerGallonChart";
 import CostPerMileChart from "@/components/charts/CostPerMileChart";
@@ -39,45 +41,43 @@ export default async function HomePage({
       : [];
 
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          <span className="flex items-center gap-2 font-bold text-lg tracking-tight">
-            <span aria-hidden className="text-xl">⛽</span>
-            <span className="text-gradient-brand">Guzzolene</span>
-          </span>
+    <div className="journal-site min-h-screen">
+      <a href="#the-data" className="skip-link">Skip to the data</a>
+      <header className="site-header">
+        <div className="journal-container header-inner">
+          <Link href="/" className="nav-wordmark" aria-label="Guzzolene home"><Fuel size={22} strokeWidth={2} aria-hidden />guzzolene<span className="brand-period">.</span></Link>
+          <nav className="section-nav" aria-label="Sections"><a href="#the-data">The data</a><a href="#the-build">The build <ArrowUpRight size={13} aria-hidden /></a></nav>
           <HomeNav />
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-10">
-        <ShowcaseHero
-          totalFills={purchases.length}
-          since={purchases[0]?.date ?? null}
-        />
-
-        <DateRangeFilter />
-
-        <OverviewGrid data={monthly} events={filteredEvents} />
-
-        <PricePerGallonChart data={monthly} events={filteredEvents} />
-
-        <CostPerMileChart data={monthly} oilPrices={oilPrices} events={filteredEvents} />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <MpgChart data={monthly} events={filteredEvents} />
-          <GpmChart data={monthly} events={filteredEvents} />
-        </div>
-
-        {/* Case study (below the fold) — PRD §5.4.1 */}
-        <CaseStudy />
-        <div className="grid gap-10 sm:grid-cols-2 border-t pt-10">
-          <TechBadges />
-          <ArchitectureDiagram />
+      <main className="journal-container">
+        <ShowcaseHero totalFills={purchases.length} since={purchases[0]?.date ?? null} />
+        <section id="the-data" className="data-section" aria-labelledby="data-heading">
+          <div className="section-heading">
+            <div><p className="eyebrow">01 — THE OBSERVATIONS</p><h2 id="data-heading">The price of <em>going places.</em></h2></div>
+            <p>At the pump. Over time.<br />Monthly averages from a real driving life.</p>
+          </div>
+          <DateRangeFilter />
+          {monthly.length > 0 ? (
+            <div className="chart-collection">
+              <div className="feature-chart"><PricePerGallonChart data={monthly} events={filteredEvents} /></div>
+              <OverviewGrid data={monthly} events={filteredEvents} />
+              <CostPerMileChart data={monthly} oilPrices={oilPrices} events={filteredEvents} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <MpgChart data={monthly} events={filteredEvents} />
+                <GpmChart data={monthly} events={filteredEvents} />
+              </div>
+            </div>
+          ) : <div className="empty-chart"><span className="eyebrow">A QUIET STRETCH</span><h3>No fill-ups in this date range.</h3><p>Choose a wider range or select All to explore the full journal.</p></div>}
+          <p className="data-footnote"><span className="status-dot" /> Real fill-ups. Monthly averages. World events for context.</p>
+        </section>
+        <div id="the-build" className="build-section">
+          <p className="eyebrow">02 — UNDER THE HOOD</p>
+          <CaseStudy />
+          <div className="build-details grid gap-10 sm:grid-cols-2"><TechBadges /><ArchitectureDiagram /></div>
         </div>
       </main>
-
       <SiteFooter />
     </div>
   );

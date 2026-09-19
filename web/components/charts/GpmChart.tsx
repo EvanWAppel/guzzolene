@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MonthlyPoint } from "@/lib/aggregations";
 import type { WorldEvent } from "@/lib/db/schema";
-import EventMarkers from "./EventMarkers";
+import EventMarkers, { EventKey } from "./EventMarkers";
 
 interface Props {
   data: MonthlyPoint[];
@@ -48,17 +48,23 @@ export default function GpmChart({ data, events }: Props) {
         </p>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="var(--border)" />
             <XAxis
               dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              minTickGap={36}
+              tickMargin={10}
               tickFormatter={(d) => d.slice(0, 7)}
               tick={{ fontSize: 11 }}
             />
             <YAxis
+              axisLine={false}
+              tickLine={false}
               tickFormatter={(v) => `${Number(v).toFixed(2)}`}
               tick={{ fontSize: 11 }}
               domain={["auto", "auto"]}
-              label={{ value: "gal/100mi", angle: -90, position: "insideLeft", fontSize: 11, fill: "#9CA3AF" }}
+              label={{ value: "gal/100mi", angle: -90, position: "insideLeft", fontSize: 11, fill: "#88867f" }}
             />
             <Tooltip
               labelFormatter={(l) => l.slice(0, 7)}
@@ -66,23 +72,23 @@ export default function GpmChart({ data, events }: Props) {
             />
             <ReferenceLine
               y={EPA_GPM}
-              stroke="#9CA3AF"
+              stroke="#88867f"
               strokeDasharray="6 3"
-              label={{ value: `EPA ${EPA_GPM}`, position: "insideTopRight", fontSize: 10, fill: "#9CA3AF" }}
+              label={{ value: `EPA ${EPA_GPM}`, position: "insideTopRight", fontSize: 10, fill: "#88867f" }}
             />
             {overallAvg && (
               <ReferenceLine
                 y={overallAvg}
-                stroke="#FF9800"
+                stroke="#b06b32"
                 strokeDasharray="4 3"
                 strokeWidth={1}
-                label={{ value: `avg ${overallAvg.toFixed(2)}`, position: "insideTopLeft", fontSize: 10, fill: "#FF9800" }}
+                label={{ value: `avg ${overallAvg.toFixed(2)}`, position: "insideTopLeft", fontSize: 10, fill: "#b06b32" }}
               />
             )}
             <Line
               type="monotone"
               dataKey="gpm"
-              stroke="#8B5CF6"
+              stroke="#78794b"
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -90,6 +96,7 @@ export default function GpmChart({ data, events }: Props) {
             <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
+        <EventKey events={events} />
       </CardContent>
     </Card>
   );

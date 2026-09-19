@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MonthlyPoint } from "@/lib/aggregations";
 import type { WorldEvent } from "@/lib/db/schema";
-import EventMarkers from "./EventMarkers";
+import EventMarkers, { EventKey } from "./EventMarkers";
 
 interface Props {
   data: MonthlyPoint[];
@@ -24,18 +24,24 @@ export default function GallonsChart({ data, events, compact }: Props) {
   return (
     <Card>
       <CardHeader className={compact ? "pb-2" : undefined}>
-        <CardTitle role="heading" aria-level={2} className={compact ? "text-sm" : undefined}>Gallons Pumped</CardTitle>
+        <CardTitle role="heading" aria-level={2} className={compact ? "text-sm" : undefined}>Average Gallons per Fill-up</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={compact ? 180 : 280}>
           <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="var(--border)" />
             <XAxis
               dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              minTickGap={36}
+              tickMargin={10}
               tickFormatter={(d) => d.slice(0, 7)}
               tick={{ fontSize: 11 }}
             />
             <YAxis
+              axisLine={false}
+              tickLine={false}
               tickFormatter={(v) => v.toFixed(1)}
               tick={{ fontSize: 11 }}
               domain={["auto", "auto"]}
@@ -47,7 +53,7 @@ export default function GallonsChart({ data, events, compact }: Props) {
             <Line
               type="monotone"
               dataKey="gallons"
-              stroke="#4CAF50"
+              stroke="#78794b"
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -55,6 +61,7 @@ export default function GallonsChart({ data, events, compact }: Props) {
             <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
+        <EventKey events={events} />
       </CardContent>
     </Card>
   );

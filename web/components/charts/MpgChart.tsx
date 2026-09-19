@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MonthlyPoint } from "@/lib/aggregations";
 import type { WorldEvent } from "@/lib/db/schema";
-import EventMarkers from "./EventMarkers";
+import EventMarkers, { EventKey } from "./EventMarkers";
 
 interface Props {
   data: MonthlyPoint[];
@@ -45,17 +45,23 @@ export default function MpgChart({ data, events }: Props) {
       <CardContent>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="var(--border)" />
             <XAxis
               dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              minTickGap={36}
+              tickMargin={10}
               tickFormatter={(d) => d.slice(0, 7)}
               tick={{ fontSize: 11 }}
             />
             <YAxis
+              axisLine={false}
+              tickLine={false}
               tickFormatter={(v) => `${v.toFixed(0)}`}
               tick={{ fontSize: 11 }}
               domain={["auto", "auto"]}
-              label={{ value: "mpg", angle: -90, position: "insideLeft", fontSize: 11, fill: "#9CA3AF" }}
+              label={{ value: "mpg", angle: -90, position: "insideLeft", fontSize: 11, fill: "#88867f" }}
             />
             <Tooltip
               labelFormatter={(l) => l.slice(0, 7)}
@@ -64,24 +70,24 @@ export default function MpgChart({ data, events }: Props) {
             {/* EPA combined reference line */}
             <ReferenceLine
               y={EPA_COMBINED}
-              stroke="#9CA3AF"
+              stroke="#88867f"
               strokeDasharray="6 3"
-              label={{ value: "EPA 31", position: "insideTopRight", fontSize: 10, fill: "#9CA3AF" }}
+              label={{ value: "EPA 31", position: "insideTopRight", fontSize: 10, fill: "#88867f" }}
             />
             {/* Personal average */}
             {overallAvg && (
               <ReferenceLine
                 y={overallAvg}
-                stroke="#FF9800"
+                stroke="#b06b32"
                 strokeDasharray="4 3"
                 strokeWidth={1}
-                label={{ value: `avg ${overallAvg.toFixed(1)}`, position: "insideBottomRight", fontSize: 10, fill: "#FF9800" }}
+                label={{ value: `avg ${overallAvg.toFixed(1)}`, position: "insideBottomRight", fontSize: 10, fill: "#b06b32" }}
               />
             )}
             <Line
               type="monotone"
               dataKey="mpg"
-              stroke="#3B82F6"
+              stroke="#3e646b"
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -89,6 +95,7 @@ export default function MpgChart({ data, events }: Props) {
             <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
+        <EventKey events={events} />
       </CardContent>
     </Card>
   );
