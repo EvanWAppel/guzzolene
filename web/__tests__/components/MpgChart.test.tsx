@@ -62,7 +62,7 @@ describe("MpgChart anomaly annotation", () => {
     const region = screen.getByRole("region", { name: /anomal/i });
     expect(region).toBeInTheDocument();
     // Plain-language annotation naming the deviation and the baseline.
-    expect(within(region).getByText(/% below your \d+-fill baseline/i)).toBeInTheDocument();
+    expect(within(region).getByText(/% below your \d+-month baseline/i)).toBeInTheDocument();
     expect(within(region).getByText(/2024-08/)).toBeInTheDocument();
   });
 

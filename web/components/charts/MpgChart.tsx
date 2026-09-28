@@ -135,7 +135,7 @@ export default function MpgChart({ data, events }: Props) {
                     style={{ backgroundColor: "#b06b32" }}
                   />
                   <span>
-                    MPG {Math.abs(a.deltaPct)}% {a.direction} your {a.baselineSize}-fill
+                    MPG {Math.abs(a.deltaPct)}% {a.direction} your {a.baselineSize}-month
                     baseline{" "}
                     <span className="text-muted-foreground">({a.date.slice(0, 7)})</span>
                   </span>
