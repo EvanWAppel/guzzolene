@@ -70,10 +70,9 @@ describe("AddFillUpForm fuel-grade dropdown", () => {
     expect(optionValues).toEqual(["87", "89", "91", "93", "diesel"]);
   });
 
-  it("does not render any photo upload UI", () => {
+  it("renders the photo-assisted entry control in the normal (authed) form", () => {
     render(<AddFillUpForm />);
-    expect(screen.queryByText(/drop pump photo/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/extracting data with claude/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/scan pump/i)).toBeInTheDocument();
   });
 
   it("numeric fields use inputMode=decimal for a mobile-friendly keypad", () => {
@@ -172,5 +171,76 @@ describe("AddFillUpForm offline capture", () => {
     await fillRequiredFieldsAndSubmit();
 
     expect(saveDraftMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("AddFillUpForm photo-assisted entry (extract-and-discard)", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function selectPhoto() {
+    const input = screen.getByLabelText(/scan pump/i) as HTMLInputElement;
+    const file = new File(["fake-jpeg-bytes"], "pump.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+  }
+
+  it("posts the photo to the auth-gated endpoint and populates editable draft fields", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        totalCost: 52.4,
+        gallons: 13.2,
+        pricePerGallon: 3.97,
+        odometer: 91000,
+        fuelGrade: "91",
+      }),
+    });
+    render(<AddFillUpForm />);
+
+    selectPhoto();
+
+    await waitFor(() =>
+      expect((screen.getByLabelText(/total cost/i) as HTMLInputElement).value).toBe("52.4"),
+    );
+    expect((screen.getByLabelText(/^gallons/i) as HTMLInputElement).value).toBe("13.2");
+    expect((screen.getByLabelText(/price per gallon/i) as HTMLInputElement).value).toBe("3.97");
+    expect((screen.getByLabelText(/odometer/i) as HTMLInputElement).value).toBe("91000");
+    expect((screen.getByLabelText(/fuel grade/i) as HTMLSelectElement).value).toBe("91");
+
+    // Populated fields remain EDITABLE drafts, not locked.
+    fireEvent.change(screen.getByLabelText(/total cost/i), { target: { value: "60.00" } });
+    expect((screen.getByLabelText(/total cost/i) as HTMLInputElement).value).toBe("60.00");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/extract-pump",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("shows a visible error and falls back to manual entry when extraction fails", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    render(<AddFillUpForm />);
+
+    selectPhoto();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toBeInTheDocument();
+
+    // Manual entry still works: fill the required date, Save becomes enabled.
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: "2026-05-25" } });
+    expect(screen.getByRole("button", { name: /save fill-up/i })).not.toBeDisabled();
+  });
+
+  it("does NOT render the photo control in demo mode (no extraction path on /demo)", () => {
+    render(<AddFillUpForm onDemoSubmit={async () => {}} />);
+    expect(screen.queryByLabelText(/scan pump/i)).not.toBeInTheDocument();
   });
 });
