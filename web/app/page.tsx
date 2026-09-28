@@ -12,6 +12,8 @@ import MpgChart from "@/components/charts/MpgChart";
 import GpmChart from "@/components/charts/GpmChart";
 import HomeNav from "@/components/HomeNav";
 import DateRangeFilter from "@/components/DateRangeFilter";
+import SnapshotShareButton from "@/components/SnapshotShareButton";
+import { createSnapshotToken } from "@/lib/snapshot-token";
 import ShowcaseHero from "@/components/ShowcaseHero";
 import TechBadges from "@/components/TechBadges";
 import ArchitectureDiagram from "@/components/ArchitectureDiagram";
@@ -25,6 +27,20 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const range = parseDateRange(params);
+
+  // A shareable snapshot token for the current filtered view (PRD §5.7). Minted
+  // server-side so the signing secret never reaches the client; only rendered
+  // when the secret is configured, so the home page still works without it. The
+  // encoded range comes from the *parsed* (validated) dates, not raw params.
+  const snapshotToken = process.env.SNAPSHOT_SIGNING_SECRET
+    ? createSnapshotToken({
+        range: {
+          from: range?.from?.toISOString().slice(0, 10),
+          to: range?.to?.toISOString().slice(0, 10),
+        },
+        events: true,
+      })
+    : null;
 
   const [purchases, events] = await Promise.all([
     listPublicPurchases(),
@@ -58,7 +74,10 @@ export default async function HomePage({
             <div><p className="eyebrow">01 — THE OBSERVATIONS</p><h2 id="data-heading">The price of <em>going places.</em></h2></div>
             <p>At the pump. Over time.<br />Monthly averages from a real driving life.</p>
           </div>
-          <DateRangeFilter />
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <DateRangeFilter />
+            {snapshotToken ? <SnapshotShareButton token={snapshotToken} /> : null}
+          </div>
           {monthly.length > 0 ? (
             <div className="chart-collection">
               <div className="feature-chart"><PricePerGallonChart data={monthly} events={filteredEvents} /></div>

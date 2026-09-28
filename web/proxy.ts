@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 export const PUBLIC_ROUTES = [
   "/",
   "/demo",
+  "/s/(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/pending",
