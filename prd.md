@@ -245,12 +245,80 @@ Lets an unauthenticated recruiter feel the dashboard and add-fill-up flow withou
 
 ---
 
+## 5.5 Photo-assisted entry — reintroduced (reverses §5.1's removal)
+
+**Goal:** Let a signed-in user snap a pump/receipt photo and have the fields (gallons, price/gal, total cost, and odometer/grade when legible) pre-filled from the image, then **confirm before saving**. This restores the capability removed in Stream B (§4.4), but rebuilt around extract-and-discard and a hard cost ceiling. It also closes the résumé gap: the shipped product demonstrates the AI-integration skill the owner markets, in a scoped, production-safe way.
+
+5.5.1 **Surface.** Upload/camera control on the authenticated add form (`/dashboard/add`) only. **Never on `/demo`** (no server-side extraction path from the demo — the demo has no server write path per §5.4.3, and must gain no API-spend path either).
+
+5.5.2 **Extraction.** One vision call to **Claude Haiku 4.5** (`claude-haiku-4-5`) via `@anthropic-ai/sdk` in `web/`, returning structured fields via structured outputs (`output_config.format`) — not free-text parsing. Decision recorded in `DECISIONS.md`.
+
+5.5.3 **Extract-and-discard.** The image is sent to the model to fill the form and is **never persisted** — no Vercel Blob, no `pump_photo_url` column reintroduced, no orphan-cleanup problem. Decision in `DECISIONS.md`.
+
+5.5.4 **Human-in-the-loop.** Extracted values populate the form as editable drafts; the user reviews and submits through the normal `createPurchase` path. Low-confidence or missing fields are left blank, not guessed. Per `claude.md`, extraction/API errors surface to the user — never silently swallowed.
+
+5.5.5 **Guardrail (blocking).** The Anthropic key must be a **scoped key in a dedicated Guzzolene workspace with a hard monthly spend cap** — not the owner's personal/default key (global guardrail; tracked in `BLOCKED.md`). No extraction code ships until that is confirmed.
+
+**Acceptance for 5.5:**
+- A photo on `/dashboard/add` pre-fills gallons/price/cost (and odometer/grade when legible); the user can edit every field before save.
+- The uploaded image is not written to any store; no `pump_photo_url` column exists.
+- No extraction endpoint is reachable from `/demo` or while signed out.
+- The extraction call targets `claude-haiku-4-5` and uses a workspace-scoped key.
+
+## 5.6 MPG anomaly detection
+
+**Goal:** Flag fill-ups where fuel economy departs meaningfully from its recent baseline, with a plain-language reason, so the MPG/GPM chart tells a story instead of showing raw points.
+
+5.6.1 **Method — statistical, not LLM.** Compute a rolling baseline (trailing window) of MPG and flag points beyond a z-score / IQR threshold. Deterministic, unit-testable (fits the TDD flow), zero API cost, no key. Decision in `DECISIONS.md`.
+
+5.6.2 **Surface.** Flagged points are visually marked on the existing MPG/GPM chart with an accessible annotation (e.g. "MPG 14% below your 6-fill baseline"). Respects the §5.2 date-range filter and the §5.4.2 location invariant on public surfaces.
+
+5.6.3 **Server-side.** Anomaly computation lives in `web/lib/` (alongside `aggregations.ts`), consumed by the chart component; pure functions with fixtured tests.
+
+**Acceptance for 5.6:**
+- Given a series with a known dip, the detector flags the expected point(s) and no others (fixtured test).
+- The annotation is keyboard/screen-reader reachable and contrast-AA (per §6).
+- Detection runs with no external calls.
+
+## 5.7 Shareable snapshot URLs
+
+**Goal:** Produce a link that opens a specific filtered view (date range + pinned events) of the owner's public, location-stripped data — something a recruiter can forward.
+
+5.7.1 **Model — expiring signed token.** The link carries a signed token encoding the view parameters and an expiry (**default 30 days**). Tampering invalidates it; expiry closes it. Decision in `DECISIONS.md`.
+
+5.7.2 **Privacy invariant.** Snapshot reads go through the existing location-stripped public-data path (§5.4.2) — coordinates are never in a snapshot, by construction.
+
+5.7.3 **Surface.** A "share this view" affordance on the public/showcase charts generates the link; opening it renders the read-only filtered view. No auth required to view; no write path.
+
+**Acceptance for 5.7:**
+- A generated link reproduces the exact date-range + events view it was created from.
+- An expired or altered token renders a clean "link expired/invalid" state, not data.
+- No snapshot response contains `lat`/`lng` (regression test, mirroring `privacy-no-location.test.ts`).
+
+## 5.8 Showcase engineering depth ("how the work reads")
+
+**Goal:** Make the already-done engineering legible to a skimming technical reviewer — convert hidden decisions into visible signal.
+
+5.8.1 **Engineering/decisions page.** A public page (e.g. `/engineering`) that renders from a real `DECISIONS.md`: walk 2–3 real trade-offs (privacy-by-construction location stripping; the `sessionStorage` demo sandbox; extract-and-discard photo entry).
+
+5.8.2 **Test + CI signal.** Surface the test count / CI status (badge in README and a small marker on the showcase home) so the "101 tests, CI green" fact is visible, not buried.
+
+5.8.3 **Shareability hygiene.** Add `robots.txt` and OpenGraph/social preview meta + image, so a shared portfolio link renders a proper card instead of a bare URL.
+
+**Acceptance for 5.8:**
+- `/engineering` renders real decision content and is linked from the showcase.
+- README shows a CI/test badge; the showcase home shows a test/CI marker.
+- Sharing `/` on a social/link preview yields a title, description, and image; `robots.txt` is served.
+
+---
+
 ## 6. Cross-cutting requirements
 
 - **Mobile parity.** Every roadmap item must work on iPhone Safari at 390px width. Desktop should not regress.
 - **Type safety.** Drizzle schema is the source of truth; do not bypass with raw SQL where a query builder works.
 - **No new auth surfaces.** Approval flow stays exactly as documented in §4.6. Do not add password reset, email verification beyond Clerk's defaults, etc.
 - **Errors surface.** Per `claude.md`: do not hide or wrap errors. Failed offline-sync attempts must be visible to the user, not silently retried forever.
+- **No personal API access behind the public app.** Any provider key wired into this deployed app (Anthropic for §5.5, etc.) must be a scoped key in a dedicated workspace with a hard spend cap — never the owner's personal/default key. Blocking item lives in `BLOCKED.md`.
 - **Showcase craft is judged.** Because `/` and `/demo` are evaluated by recruiters (§5.4), they must meet a visibly high bar: accessible (keyboard + screen-reader sane, sufficient contrast), fast (the §5.2 caching budget applies to the showcase), and clean on iPhone Safari at 390px. Sloppiness here reads as the opposite of the intended signal.
 
 ---
