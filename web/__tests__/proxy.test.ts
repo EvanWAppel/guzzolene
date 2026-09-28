@@ -7,9 +7,10 @@ import { PUBLIC_ROUTES } from "@/proxy";
  * redirect recruiters to sign-in. Keep the public showcase routes here.
  */
 describe("public routes", () => {
-  it("includes the showcase home and the read-only demo", () => {
+  it("includes the showcase home, the read-only demo, and the engineering page", () => {
     expect(PUBLIC_ROUTES).toContain("/");
     expect(PUBLIC_ROUTES).toContain("/demo");
+    expect(PUBLIC_ROUTES).toContain("/engineering");
   });
 
   it("does NOT expose the authenticated dashboard", () => {

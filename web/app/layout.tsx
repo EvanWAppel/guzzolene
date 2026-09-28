@@ -1,7 +1,8 @@
-import type { Metadata, Viewport } from "next";
+import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import PWARegister from "@/components/PWARegister";
+import { siteMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,11 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Guzzolene — A Personal Fuel Journal",
-  description: "One car. A world of moving parts. Explore real fuel economy and price trends with the world events behind them.",
-  manifest: "/manifest.webmanifest",
-};
+export const metadata = siteMetadata;
 
 export const viewport: Viewport = {
   themeColor: "#e3422b",
