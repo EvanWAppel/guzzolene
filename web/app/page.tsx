@@ -17,6 +17,7 @@ import TechBadges from "@/components/TechBadges";
 import ArchitectureDiagram from "@/components/ArchitectureDiagram";
 import CaseStudy from "@/components/CaseStudy";
 import SiteFooter from "@/components/SiteFooter";
+import TestStatusMarker from "@/components/TestStatusMarker";
 
 export default async function HomePage({
   searchParams,
@@ -73,7 +74,10 @@ export default async function HomePage({
           <p className="data-footnote"><span className="status-dot" /> Real fill-ups. Monthly averages. World events for context.</p>
         </section>
         <div id="the-build" className="build-section">
-          <p className="eyebrow">02 — UNDER THE HOOD</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="eyebrow">02 — UNDER THE HOOD</p>
+            <TestStatusMarker />
+          </div>
           <CaseStudy />
           <div className="build-details grid gap-10 sm:grid-cols-2"><TechBadges /><ArchitectureDiagram /></div>
         </div>

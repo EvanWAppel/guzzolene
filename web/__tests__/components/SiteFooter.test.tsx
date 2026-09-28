@@ -30,4 +30,11 @@ describe("SiteFooter", () => {
       screen.getByRole("link", { name: /try the live demo/i }),
     ).toHaveAttribute("href", "/demo");
   });
+
+  it("links to the engineering / decisions write-up", () => {
+    render(<SiteFooter />);
+    expect(
+      screen.getByRole("link", { name: /engineering|decisions/i }),
+    ).toHaveAttribute("href", "/engineering");
+  });
 });

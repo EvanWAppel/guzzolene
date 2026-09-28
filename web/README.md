@@ -1,5 +1,8 @@
 # Gas Economics — Web App
 
+[![CI](https://github.com/EvanWAppel/guzzolene/actions/workflows/ci.yml/badge.svg)](https://github.com/EvanWAppel/guzzolene/actions/workflows/ci.yml)
+&nbsp;157 tests · Vitest · lint + test run on every push (`.github/workflows/ci.yml`)
+
 A public web application that turns a personal gas purchase log (tracked since December 2018) into interactive charts — and lets approved users track their own fuel data with the same visualizations. The public surface doubles as a portfolio showcase: a product-first landing page plus a read-only demo recruiters can click through without signing in.
 
 Live: **https://guzzo-lene.com**
