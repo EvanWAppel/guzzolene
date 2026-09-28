@@ -22,6 +22,29 @@ async function registerBackgroundSync() {
 }
 
 /**
+ * Read a photo into base64 for the extract-and-discard endpoint. Uses
+ * `arrayBuffer()` + `btoa` (deterministic in jsdom) rather than FileReader.
+ */
+async function fileToBase64(file: File): Promise<{ data: string; mediaType: string }> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return { data: btoa(binary), mediaType: file.type || "image/jpeg" };
+}
+
+/** Shape returned by /api/extract-pump — every field optional (see lib/pump-extract). */
+type ExtractedPumpFields = {
+  gallons?: number;
+  pricePerGallon?: number;
+  totalCost?: number;
+  odometer?: number;
+  fuelGrade?: string;
+};
+
+/**
  * `onDemoSubmit`, when provided, switches the form into demo mode (PRD §5.4.3):
  * submits go to the caller's sandbox handler instead of the server/offline path,
  * and captured geolocation is deliberately discarded (never passed on) — G-23.
@@ -34,6 +57,8 @@ export default function AddFillUpForm({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [queued, setQueued] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
 
   const [date, setDate] = useState("");
   const [cost, setCost] = useState("");
@@ -50,6 +75,47 @@ export default function AddFillUpForm({
       () => setCoords(null),
     );
   }, []);
+
+  /**
+   * Photo-assisted entry (H): send the photo to the auth-gated extract-and-discard
+   * endpoint and pre-fill the form with EDITABLE drafts. On failure, surface a
+   * visible error and leave the user in manual entry — nothing is stored. Only
+   * available in the real authed form (never in demo mode).
+   */
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Allow re-selecting the same file later.
+    e.target.value = "";
+    if (!file) return;
+
+    setExtractError(null);
+    setExtracting(true);
+    try {
+      const { data, mediaType } = await fileToBase64(file);
+      const res = await fetch("/api/extract-pump", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData: data, mediaType }),
+      });
+      if (!res.ok) {
+        throw new Error(`Extraction failed (${res.status})`);
+      }
+      const fields = (await res.json()) as ExtractedPumpFields;
+      // Only fill fields the model actually returned — leave the rest for manual entry.
+      if (fields.totalCost != null) setCost(String(fields.totalCost));
+      if (fields.gallons != null) setGallons(String(fields.gallons));
+      if (fields.pricePerGallon != null) setPricePerGallon(String(fields.pricePerGallon));
+      if (fields.odometer != null) setOdometer(String(fields.odometer));
+      if (fields.fuelGrade) setFuelGrade(fields.fuelGrade);
+    } catch {
+      // Surface it to the user (visible), then fall back to manual entry.
+      setExtractError(
+        "Couldn't read that photo. Enter the fill-up details manually below.",
+      );
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +172,8 @@ export default function AddFillUpForm({
   function reset() {
     setSaved(false);
     setQueued(false);
+    setExtractError(null);
+    setExtracting(false);
     setDate("");
     setCost("");
     setGallons("");
@@ -130,6 +198,35 @@ export default function AddFillUpForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Photo-assisted entry — only in the real authed form, never in demo (§5.4.3). */}
+      {!onDemoSubmit && (
+        <div className="space-y-2 rounded-lg border border-border/60 p-3">
+          <Label htmlFor="pump-photo">Scan pump display or receipt (optional)</Label>
+          <Input
+            id="pump-photo"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            disabled={extracting}
+            onChange={handlePhoto}
+          />
+          <p className="text-xs text-muted-foreground">
+            We read the numbers off the photo to pre-fill the form — the image is
+            never saved. Review the values before saving.
+          </p>
+          {extracting && (
+            <p className="text-sm text-muted-foreground" role="status">
+              Reading photo…
+            </p>
+          )}
+          {extractError && (
+            <p className="text-sm text-destructive" role="alert">
+              {extractError}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2 space-y-1">
           <Label htmlFor="date">Date</Label>
