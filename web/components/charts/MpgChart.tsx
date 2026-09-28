@@ -8,11 +8,13 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceDot,
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MonthlyPoint } from "@/lib/aggregations";
 import type { WorldEvent } from "@/lib/db/schema";
+import { detectAnomalies } from "@/lib/anomalies";
 import EventMarkers, { EventKey } from "./EventMarkers";
 
 interface Props {
@@ -29,6 +31,14 @@ export default function MpgChart({ data, events }: Props) {
     validPoints.length > 0
       ? validPoints.reduce((s, d) => s + d.mpg!, 0) / validPoints.length
       : null;
+
+  // Statistical anomaly detection (PRD §5.6, DECISIONS.md D-3): a trailing rolling
+  // baseline + z-score flag on the MPG series. `data` is already narrowed by the
+  // §5.2 date-range filter upstream, so anomalies inherit that window; MonthlyPoint
+  // carries no lat/lng, so the §5.4.2 location invariant is untouched here.
+  const anomalies = detectAnomalies(
+    data.map((d) => ({ date: d.date, value: d.mpg })),
+  );
 
   return (
     <Card>
@@ -92,9 +102,48 @@ export default function MpgChart({ data, events }: Props) {
               dot={false}
               connectNulls
             />
+            {/* Visual markers for flagged points (annotation text is in the region below) */}
+            {anomalies.map((a) => (
+              <ReferenceDot
+                key={`anomaly-${a.date}`}
+                x={a.date}
+                y={a.value}
+                r={5}
+                fill="#b06b32"
+                stroke="var(--background)"
+                strokeWidth={2}
+              />
+            ))}
             <EventMarkers events={events} />
           </LineChart>
         </ResponsiveContainer>
+        {anomalies.length > 0 && (
+          <div
+            role="region"
+            aria-label="MPG anomalies"
+            className="mt-4 border-t border-border pt-3"
+          >
+            <h3 className="text-sm font-medium text-foreground">
+              Anomalies vs. recent baseline
+            </h3>
+            <ul className="mt-1 space-y-1 text-sm text-foreground">
+              {anomalies.map((a) => (
+                <li key={`anomaly-note-${a.date}`} className="flex items-baseline gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: "#b06b32" }}
+                  />
+                  <span>
+                    MPG {Math.abs(a.deltaPct)}% {a.direction} your {a.baselineSize}-fill
+                    baseline{" "}
+                    <span className="text-muted-foreground">({a.date.slice(0, 7)})</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <EventKey events={events} />
       </CardContent>
     </Card>
