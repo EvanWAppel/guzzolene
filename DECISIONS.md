@@ -8,7 +8,7 @@ The agent drafts each entry; Evan confirms it. Newest at the bottom.
 ## 2026-09-27 — Feature round: photo entry, anomaly detection, snapshots, showcase depth
 
 Seeded from the requirements interview for the four new workstreams (PRD §5.5–§5.8).
-Status: **drafted, pending Evan's confirmation.**
+Status: **confirmed by Evan, 2026-09-30.**
 
 ### D-1 — Reintroduce photo-assisted entry, but extract-and-discard
 - **Chose:** Re-add photo → field extraction on the authenticated add form, rebuilt so the image is sent to the model and **never persisted**.
@@ -43,7 +43,7 @@ Two decisions that were already made and shipped in Stream G but never written i
 this ledger. Recorded here so the public `/engineering` write-up (PRD §5.8.1) renders
 the three named trade-offs from a single real source. Content is drawn from the
 shipped code (`web/lib/public-data.ts`) and `web/docs/adr-demo-sandbox.md`.
-Status: **drafted, pending Evan's confirmation.**
+Status: **confirmed by Evan, 2026-09-30.**
 
 ### D-5 — Privacy by construction: strip location at the query
 - **Chose:** Omit `lat`/`lng` from the query projection used by every public surface (`web/lib/public-data.ts`), so coordinates are never *transmitted* to an unauthenticated visitor.
