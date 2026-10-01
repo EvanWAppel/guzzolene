@@ -8,6 +8,7 @@ import Link from "next/link";
  * (PRD §7) — mailto + social links only.
  */
 const LINKS = [
+  { label: "Engineering notes", href: "/engineering" },
   { label: "GitHub repo", href: "https://github.com/EvanWAppel/guzzolene" },
   { label: "GitHub profile (@EvanWAppel)", href: "https://github.com/EvanWAppel" },
   {

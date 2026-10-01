@@ -701,3 +701,73 @@ Accessibility hit 100 on both once the contrast fix landed (was 96 on `/`). **Pe
 - ✅ Docs done: `web/README.md` (intro, What It Does, a "Recruiter Showcase & Read-Only Demo" build section, Project Structure, proxy public routes) and root `readme.md` Web App paragraph now describe the showcase home, `/demo`, the privacy invariant, and the sessionStorage sandbox.
 - ✅ Identity content in place (Evan Appel, links, `web/public/resume.pdf` = AI-engineer résumé) — not placeholders.
 - ⏳ Remaining: deploy to Vercel production; smoke `/` and `/demo` on the prod URL (real data, no location, fresh-session reset). Blocked on G-26/G-27 local verification first.
+
+---
+
+## Phase 4 — New feature streams (2026-09-27)
+
+Seeded from the requirements interview; specs in `prd.md` §5.5–§5.8, decisions in `DECISIONS.md`.
+
+**Parallelism:** Streams **I, J, K are independent** (disjoint files, no shared migration) and may fan out to their own git worktrees, merged back one at a time with central Check + adversarial Review per ROCRLL. **Stream H is independent too but BLOCKED** on the Anthropic key guardrail (`BLOCKED.md`) — do not start its extraction code until the scoped-key checklist is confirmed. All work lands via feature branches → PRs (no direct push to `main`).
+
+### Stream H — Photo-assisted entry (PRD §5.5) — 🔴 BLOCKED on key
+
+**Gate:** `BLOCKED.md` item — scoped Anthropic workspace key + spend cap confirmed. H-2 onward stays unstarted until then.
+
+#### H-1 — [ ] Test: no photo endpoint reachable from `/demo` or signed-out
+**TDD:** Extend proxy/privacy tests — the extraction route is auth-gated and absent from `PUBLIC_ROUTES`; a signed-out / demo request gets no extraction path. (Can be written now — it asserts the guardrail boundary.)
+
+#### H-2 — [ ] Test: extraction lib returns structured fields from an image
+**Deps:** H-1, key gate
+**TDD:** `web/lib/pump-extract.ts` — given a fixture image (base64), the mocked `@anthropic-ai/sdk` client is called with `claude-haiku-4-5` and structured outputs (`output_config.format`); returns typed `{ gallons?, pricePerGallon?, totalCost?, odometer?, fuelGrade? }` with missing/low-confidence fields left undefined, not guessed.
+
+#### H-3 — [ ] Implement extraction lib (extract-and-discard)
+**Deps:** H-2
+**TDD:** Vision call to Haiku 4.5; image is never persisted (no Blob, no `pump_photo_url`). Errors surface (no swallow, per `claude.md`).
+
+#### H-4 — [ ] Test + implement auth-gated extraction route
+**Deps:** H-3
+**TDD:** `POST /api/extract-pump` requires an approved session; returns extracted fields; rejects unauthenticated. Reuses ownership/approval checks.
+
+#### H-5 — [ ] Test + implement photo control + human-confirm on add form
+**Deps:** H-4
+**TDD:** Upload/camera input on `/dashboard/add`; on extraction, fields populate as **editable drafts**; user edits/confirms and submits via existing `createPurchase`. Extraction failure shows a visible error and falls back to manual entry.
+
+### Stream I — MPG anomaly detection (PRD §5.6) — parallelizable
+
+#### I-1 — [ ] Test: detector flags known dips, ignores normal variance
+**TDD:** `web/lib/anomalies.ts` pure fn — fixtured MPG series with a planted dip → flags expected index(es), no false positives; rolling window + z-score/IQR threshold; deterministic, no external calls.
+
+#### I-2 — [ ] Implement anomaly detector
+**Deps:** I-1
+
+#### I-3 — [ ] Test + render anomaly annotations on the MPG/GPM chart
+**Deps:** I-2
+**TDD:** Flagged points marked with an accessible, contrast-AA annotation ("MPG N% below your K-fill baseline"); respects the date-range filter; location invariant intact on public surfaces.
+
+### Stream J — Shareable snapshot URLs (PRD §5.7) — parallelizable
+
+#### J-1 — [ ] Test: sign/verify snapshot token (round-trip + expiry + tamper)
+**TDD:** `web/lib/snapshot-token.ts` — encodes `{ range, events, exp }`; verify accepts a valid unexpired token, rejects expired and tampered ones. Default expiry 30 days.
+
+#### J-2 — [ ] Implement token sign/verify
+**Deps:** J-1
+
+#### J-3 — [ ] Test + implement snapshot view route (location-stripped)
+**Deps:** J-2
+**TDD:** Opening a valid link renders the exact filtered read-only view via the public-data (location-stripped) path; expired/invalid → clean "link expired/invalid" state, never data. Regression test mirroring `privacy-no-location.test.ts`: no `lat`/`lng` in any snapshot response.
+
+#### J-4 — [ ] Test + implement "share this view" affordance
+**Deps:** J-3
+**TDD:** Control on the public/showcase charts generates the current-view link; no write path, no auth to view.
+
+### Stream K — Showcase engineering depth (PRD §5.8) — parallelizable
+
+#### K-1 — [ ] Test + build `/engineering` page from `DECISIONS.md`
+**TDD:** Public page renders real decision content (2–3 trade-offs), linked from the showcase footer/hero; accessible + AA per §6.
+
+#### K-2 — [ ] Add CI/test badge + showcase test marker
+**TDD:** README shows a CI/test-count badge; the showcase home shows a small "N tests · CI green" marker sourced from a real number.
+
+#### K-3 — [ ] Add `robots.txt` + OpenGraph/social preview meta + image
+**TDD:** `robots.txt` served; `/` emits OG/Twitter title, description, and image; a link-preview check yields a proper card. (Closes the §5.8.3 / prior Lighthouse "no robots.txt" gap.)

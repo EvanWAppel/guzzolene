@@ -1,5 +1,7 @@
 # Gas Economics
 
+[![CI](https://github.com/EvanWAppel/guzzolene/actions/workflows/ci.yml/badge.svg)](https://github.com/EvanWAppel/guzzolene/actions/workflows/ci.yml)
+
 My friend Christine thinks that gasoline has become diluted since the Iran war started. This project tracks my personal gas purchase history for my Mazda 3 Sport to see whether fuel economy has measurably changed — and to put price swings in the context of the geopolitical events that caused them.
 
 ## Web App

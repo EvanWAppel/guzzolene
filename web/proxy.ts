@@ -1,11 +1,14 @@
 import { clerkMiddleware, clerkClient, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// Anonymous-accessible routes. `/` and `/demo` are the public recruiter
-// surfaces (PRD §5.4); everything else falls through to the auth gate below.
+// Anonymous-accessible routes. `/`, `/demo` and `/engineering` are the public
+// recruiter surfaces (PRD §5.4, §5.8); everything else falls through to the auth
+// gate below.
 export const PUBLIC_ROUTES = [
   "/",
   "/demo",
+  "/s/(.*)",
+  "/engineering",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/pending",
