@@ -1,0 +1,41 @@
+# Drafted on 2026-10-28 by _system 4b (not yet verified in guzzolene's own session).
+# Format: ~/Documents/_system/docs/project-toml.md
+
+[project]
+name = "guzzolene"
+group = "portfolio"
+kind = "app"                # Next.js app in web/; root Python tool is frozen (readme.md)
+status = "active"
+repo = "EvanWAppel/guzzolene"
+visibility = "public"       # gh repo view
+on_site = true              # enki data/projects.ts:7 (id "guzzolene")
+verified = false
+
+[deploy]
+host = "vercel"             # web/README.md "How It's Built"; PRD.md:97
+services = ["web"]          # Vercel projectName in web/.vercel/project.json (local link)
+domain = "guzzo-lene.com"   # web/README.md "Live:"
+origin_urls_closed = "unknown"   # *.vercel.app reachability not checked
+
+[auth]
+scheme = "clerk"            # Clerk sign-up + admin approval via publicMetadata (web/README.md "Auth")
+access_list = "clerk:publicMetadata.approved"   # approval state lives in Clerk, no users table
+target = "unknown"          # no AUTH target decided for this repo yet
+
+[data]
+db = "neon"                 # Neon Postgres + Drizzle, DATABASE_URL (web/README.md "Database")
+
+[demo]
+status = "live"             # /demo is public, sign-in-free, writes sandboxed in the browser
+                            # (web/proxy.ts PUBLIC_ROUTES; web/README.md)
+url = "https://guzzo-lene.com/demo"
+path = "/demo"
+
+[keys]
+paid = ["anthropic"]        # ANTHROPIC_API_KEY read by `new Anthropic()` for pump-photo extraction
+                            # (web/lib/pump-extract.ts:82; PRD.md §5.5)
+isolated = "yes"            # BLOCKED.md comment "Resolved 2026-09-27: scoped ... Anthropic workspace
+spend_cap = "yes"           # key confirmed" (+ PRD.md §5.5.5); re-check in the Anthropic console
+
+[platform]
+done = []
