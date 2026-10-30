@@ -39,3 +39,13 @@ spend_cap = "yes"           # key confirmed" (+ PRD.md §5.5.5); re-check in the
 
 [platform]
 done = []
+
+[commands]
+dev = "cd web && npm run dev"
+test = "cd web && npm run test"
+lint = "cd web && npm run lint"
+
+[meta]
+description = "Gas-economics tracker"
+language = "node"
+tags = ["portfolio", "demo-mode"]
