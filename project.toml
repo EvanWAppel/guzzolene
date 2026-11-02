@@ -44,8 +44,16 @@ done = []
 dev = "cd web && npm run dev"
 test = "cd web && npm run test"
 lint = "cd web && npm run lint"
+setup = "cd web && npm ci"
 
 [meta]
 description = "Gas-economics tracker"
 language = "node"
 tags = ["portfolio", "demo-mode"]
+
+[fleet]                     # joined 2026-11-01 (_system D-051); also has the `fleet` topic
+component = "guzzolene"
+agents = ["claude", "codex"]
+default_model = "sonnet"
+default_branch = "main"
+max_minutes = 45
